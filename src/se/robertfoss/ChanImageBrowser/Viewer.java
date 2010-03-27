@@ -3,7 +3,6 @@ package se.robertfoss.ChanImageBrowser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,18 +10,13 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory.Options;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 public class Viewer extends Activity {
 	
@@ -34,6 +28,7 @@ public class Viewer extends Activity {
     private ImageView imgView;
     private FetcherManager man;
     private static final boolean isDebug = true;
+    
     
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,9 +44,10 @@ public class Viewer extends Activity {
         man = new FetcherManager(this);
         printDebug("Running manager thread");
         imgView.setImageResource(R.drawable.icon);
-        man.execute(null);
+        man.execute((Void)null);
         
     }
+    
     
     public void addCompleteImage(File file){
     	
@@ -90,7 +86,7 @@ public class Viewer extends Activity {
     	return pic;
     }
     
-    private synchronized static void printDebug(String str){
+    synchronized static void printDebug(String str){
     	if (isDebug){
     		System.out.println(str);
     	}
@@ -132,7 +128,7 @@ public class Viewer extends Activity {
     public static Bitmap getImgFromUrl(String sUrl) throws IOException  {
     	final int TARGET_HEIGHT = 800;
     	final int TARGET_WIDTH = 400;
-    	//final int IMG_BUFFER_SIZE = 25384;
+    	
     	printDebug("Getting image content - " + sUrl);
     	
         InputStream is = getHTTPConnectionInputStream(sUrl);   
@@ -143,7 +139,6 @@ public class Viewer extends Activity {
         BitmapFactory.decodeStream(is, null, options);
 
 	     // Only scale if we need to 
-	     // (16384 buffer for img processing)
 	     Boolean scaleByHeight = Math.abs(options.outHeight - TARGET_HEIGHT) >= Math.abs(options.outWidth - TARGET_WIDTH);
 	     printDebug("Image size: " + options.outWidth + "x" + options.outHeight);
 	     if(options.outHeight * options.outWidth * 2 >= 150*150*2){
@@ -159,168 +154,11 @@ public class Viewer extends Activity {
 	
 	     // Do the actual decoding
 	     options.inJustDecodeBounds = false;
-	     //options.inTempStorage = new byte[IMG_BUFFER_LEN];
 	     
 	     is.close();
 	     is = getHTTPConnectionInputStream(sUrl);
 	     Bitmap img = BitmapFactory.decodeStream(is, null, options);
 
     	return img;
-    }
-    
-    public void Toast(String str){
-    	Toast.makeText(this, str, Toast.LENGTH_SHORT);
-    }
-        
-    
-    public class FetcherManager extends AsyncTask{
-    	
-        private IndexFetcher indexFetcher;
-        private ArrayList<String> visitedUrls;
-        private ArrayList<String> urlList;
-        private ArrayList<Fetcher> fetchers;
-        private final int NUMBER_OF_FETCHERS = 3;
-    	private Viewer parent;
-    	
-    	FetcherManager(Viewer view){
-    		printDebug("Creating Fetchers \n");
-    		parent = view;
-    		visitedUrls = new ArrayList<String>();
-    		urlList = new ArrayList<String>();
-            indexFetcher = new IndexFetcher(this);
-            fetchers = new ArrayList<Fetcher>();
-            
-            for (int i = 0; i < NUMBER_OF_FETCHERS; i++){
-            	printDebug("Fetcher-" + i + " created");
-            	Fetcher temp = new Fetcher(this);
-            	fetchers.add(temp);
-            }
-    	}
-    	
-
-    	protected Object doInBackground(Object... arg0){
-    		printDebug("Running Fetcher \n");
-    		indexFetcher.run();
-    		while (urlList.size() == 0){
-    			try {
-    				printDebug("Manager is waiting..");
-					Thread.sleep(20);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-    		}
-    		
-            for (Fetcher i : fetchers){
-            	i.run();
-            }
-            return null;
-    	}
-    	
-    	public synchronized void addCompleteImage(File file, Bitmap img){
-    		printDebug("Saving complete Image \n");
-        			try { 	    
-        				
-        			    FileOutputStream fos = parent.openFileOutput(file.toString(), MODE_PRIVATE);
-        		   
-        			    img.compress(CompressFormat.JPEG, 100, fos);
-        			    fos.flush();	           
-        			    fos.close();	      
-        			    img.recycle();
-        			} catch (Exception e) {	        
-        			    e.printStackTrace();        
-        			}
-        			parent.addCompleteImage(file);
-        		} 			
-
-    	
-    	public synchronized String getNextImageName(){
-    		if (urlList.size() != 0) {
-    			
-    			String temp = urlList.get(urlList.size()-1);
-    			printDebug("Delivered next url -  " + temp);
-    			visitedUrls.add(temp);
-    			printDebug("Trying to remove url-" + urlList.size() + "  from urlList");
-    			urlList.remove(urlList.size()-1);
-    			return temp;
-    		}
-    		return null;
-    	}
-    	
-    	public synchronized void addUrl(String url){
-    		printDebug("Trying to add url");
-    		if (!urlList.contains(url) && !visitedUrls.contains(url)){
-    			System.out.println("Added url  -  " + url);
-    			urlList.add(url);
-    		}
-    	}
-
-    }
-    public class Fetcher extends Thread {
-    	
-    	private FetcherManager manager;
-    	
-    	Fetcher(FetcherManager manager){
-    		this.manager = manager; 
-    	}
-
-    	public void run(){
-    		printDebug("Running a Fetcher thread");
-    		String inputFile = manager.getNextImageName();
-			while (inputFile != null){
-					try {
-						printDebug("Fetching picture  -  " + inputFile);
-						Bitmap pic = getImgFromUrl("http://images.4chan.org/b/src/" + inputFile);
-
-						printDebug("Fetcher is adding downloaded a picture");
-						if (pic != null){
-						manager.addCompleteImage(new File(inputFile), pic);
-						} else {
-							printDebug(inputFile + " could'nt be parsed into a Bitmap");
-						}
-					} catch (Exception e) {
-						printDebug("An image wasnt downloaded correctly");
-						e.printStackTrace();
-					}
-					try {
-						Thread.sleep(150);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					inputFile = manager.getNextImageName();
-			}
-    	}
-    }
-    
-    public class IndexFetcher extends Thread {
-    	
-    	private FetcherManager manager;
-    	String regex = "http://images.4chan.org/b/src/(\\d*).(jpg|gif|png)";
-    	private Pattern imgID;
-    	private Matcher matcher;
-    	
-    	
-    	IndexFetcher(FetcherManager manager){
-    		this.manager = manager;
-    		imgID = Pattern.compile(regex);
-    	}
-    	public void run(){
-    		printDebug("Running a indexfetcher thread");
-    		String imgboard = "";
-    		try {
-				imgboard = Viewer.getUrlContent("http://img.4chan.org/b/imgboard.html");
-			} catch (Exception e) {
-				printDebug("Fuckballs! Can't download /b/imgboard.html");
-				Toast("img.4chan.org can't be resolved");
-				e.printStackTrace();
-			}
-
-			matcher = imgID.matcher(imgboard);
-			
-			while (matcher.find()){
-				manager.addUrl(matcher.group(1)+ "." + matcher.group(2));
-			}
-			
-			matcher = null;
-    	}
     }
 }
