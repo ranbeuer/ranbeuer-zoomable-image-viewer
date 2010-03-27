@@ -73,7 +73,17 @@ public class Viewer extends Activity {
     		printDebug("Trying to display null-picture");
     	}
     }
-
+    
+    public void displayPicture(String fileName){
+    	printDebug("Pictures in storage: " + fileList.size());
+    	Bitmap pic = getImgFromFile(new File(fileName));
+    	if (pic != null) {
+    		printDebug("Displaying picture that isnt null");
+    		imgView.setImageBitmap(getImgFromFile(fileList.get(fileList.size()-1)));
+    	} else {
+    		printDebug("Trying to display null-picture");
+    	}
+    }
     
     public Bitmap getImgFromFile(File file){
     	
@@ -173,13 +183,14 @@ public class Viewer extends Activity {
     }
         
     
-    public class FetcherManager extends AsyncTask{
+    public class FetcherManager extends AsyncTask<Void, Void, Void>{
     	
-        private IndexFetcher indexFetcher;
+        protected IndexFetcher indexFetcher;
         private ArrayList<String> visitedUrls;
         private ArrayList<String> urlList;
-        private ArrayList<Fetcher> fetchers;
-        private final int NUMBER_OF_FETCHERS = 3;
+        //private ArrayList<Fetcher> fetchers;
+        //private final int NUMBER_OF_FETCHERS = 3;
+        private final String url = "http://img.4chan.org/b/imgboard.html";
     	private Viewer parent;
     	
     	FetcherManager(Viewer view){
@@ -188,33 +199,22 @@ public class Viewer extends Activity {
     		visitedUrls = new ArrayList<String>();
     		urlList = new ArrayList<String>();
             indexFetcher = new IndexFetcher(this);
-            fetchers = new ArrayList<Fetcher>();
+            //fetchers = new ArrayList<Fetcher>();
             
-            for (int i = 0; i < NUMBER_OF_FETCHERS; i++){
+            /*for (int i = 0; i < NUMBER_OF_FETCHERS; i++){
             	printDebug("Fetcher-" + i + " created");
             	Fetcher temp = new Fetcher(this);
             	fetchers.add(temp);
-            }
+            }*/
     	}
     	
 
-    	protected Object doInBackground(Object... arg0){
+    	protected Void doInBackground(Void... params){
     		printDebug("Running Fetcher \n");
-    		indexFetcher.run();
-    		while (urlList.size() == 0){
-    			try {
-    				printDebug("Manager is waiting..");
-					Thread.sleep(20);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-    		}
-    		
-            for (Fetcher i : fetchers){
-            	i.run();
-            }
+    		indexFetcher.execute(url); 		
             return null;
     	}
+    	
     	
     	public synchronized void addCompleteImage(File file, Bitmap img){
     		printDebug("Saving complete Image \n");
@@ -233,7 +233,7 @@ public class Viewer extends Activity {
         		} 			
 
     	
-    	public synchronized String getNextImageName(){
+    	private synchronized String getNextImageName(){
     		if (urlList.size() != 0) {
     			
     			String temp = urlList.get(urlList.size()-1);
@@ -247,33 +247,49 @@ public class Viewer extends Activity {
     	}
     	
     	public synchronized void addUrl(String url){
-    		printDebug("Trying to add url");
+    		//printDebug("Trying to add url");
     		if (!urlList.contains(url) && !visitedUrls.contains(url)){
     			System.out.println("Added url  -  " + url);
     			urlList.add(url);
     		}
     	}
 
+
+		public synchronized void startFetchers() {
+			printDebug("	inside startFetchers()");
+            while (urlList.size() > 0){
+            	new Fetcher(this).execute(getNextImageName());
+            	printDebug("New Fetcher created");
+            	try {
+					Thread.sleep(250);
+					printDebug("startFetchers() is sleeping..");
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+            }
+		}
     }
-    public class Fetcher extends Thread {
+    public class Fetcher extends AsyncTask<String, Void, Bitmap> {
     	
     	private FetcherManager manager;
+    	private String inputFile;
     	
     	Fetcher(FetcherManager manager){
     		this.manager = manager; 
     	}
 
-    	public void run(){
+    	protected Bitmap doInBackground(String... args){
     		printDebug("Running a Fetcher thread");
-    		String inputFile = manager.getNextImageName();
-			while (inputFile != null){
+    		inputFile = manager.getNextImageName();
+    		Bitmap pic = null;
 					try {
 						printDebug("Fetching picture  -  " + inputFile);
-						Bitmap pic = getImgFromUrl("http://images.4chan.org/b/src/" + inputFile);
+						pic = getImgFromUrl("http://images.4chan.org/b/src/" + inputFile);
 
 						printDebug("Fetcher is adding downloaded a picture");
 						if (pic != null){
-						manager.addCompleteImage(new File(inputFile), pic);
+							return pic;
+							//manager.addCompleteImage(new File(inputFile), pic);
 						} else {
 							printDebug(inputFile + " could'nt be parsed into a Bitmap");
 						}
@@ -281,17 +297,19 @@ public class Viewer extends Activity {
 						printDebug("An image wasnt downloaded correctly");
 						e.printStackTrace();
 					}
-					try {
-						Thread.sleep(150);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					inputFile = manager.getNextImageName();
-			}
+			return pic;
     	}
-    }
     
-    public class IndexFetcher extends Thread {
+	    // can use UI thread here
+	    protected void onPostExecute(Bitmap pic) {
+	       Viewer.this.displayPicture(inputFile);
+	       //Main.this.output.setText(result);
+	    }
+}
+ 
+
+    
+    public class IndexFetcher extends AsyncTask<String, Void, Void> {
     	
     	private FetcherManager manager;
     	String regex = "http://images.4chan.org/b/src/(\\d*).(jpg|gif|png)";
@@ -303,11 +321,11 @@ public class Viewer extends Activity {
     		this.manager = manager;
     		imgID = Pattern.compile(regex);
     	}
-    	public void run(){
+    	protected Void doInBackground(String... params){
     		printDebug("Running a indexfetcher thread");
     		String imgboard = "";
     		try {
-				imgboard = Viewer.getUrlContent("http://img.4chan.org/b/imgboard.html");
+				imgboard = Viewer.getUrlContent(params[0]);
 			} catch (Exception e) {
 				printDebug("Fuckballs! Can't download /b/imgboard.html");
 				Toast("img.4chan.org can't be resolved");
@@ -319,8 +337,13 @@ public class Viewer extends Activity {
 			while (matcher.find()){
 				manager.addUrl(matcher.group(1)+ "." + matcher.group(2));
 			}
-			
-			matcher = null;
+			manager.startFetchers();		
+			return null;
     	}
+        protected void onPostExecute(final String result) {
+            manager.startFetchers();
+            
+         }
+
     }
 }
