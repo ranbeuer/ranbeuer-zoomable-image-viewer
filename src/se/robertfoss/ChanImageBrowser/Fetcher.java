@@ -3,8 +3,9 @@ package se.robertfoss.ChanImageBrowser;
 import java.io.File;
 
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 
-public class Fetcher extends Thread {
+public class Fetcher extends AsyncTask<Void, Void, Void> {
 	
 	private FetcherManager manager;
 	
@@ -12,7 +13,7 @@ public class Fetcher extends Thread {
 		this.manager = manager; 
 	}
 
-	public void run(){
+	protected Void doInBackground(Void... params){
 		Viewer.printDebug("Running a Fetcher thread");
 		String inputFile = manager.getNextImageName();
 		while (inputFile != null){
@@ -37,5 +38,6 @@ public class Fetcher extends Thread {
 				}
 				inputFile = manager.getNextImageName();
 		}
+		return (Void)null;
 	}
 }

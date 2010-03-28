@@ -3,12 +3,17 @@
       package="se.robertfoss.ChanImageBrowser"
       android:versionCode="1"
       android:versionName="1.0">
-      	<uses-sdk 	android:minSdkVersion="3"
-				android:targetSdkVersion="4"/>
+      	<uses-sdk 	
+      		android:minSdkVersion="3"
+			android:targetSdkVersion="4"/>
 	<uses-permission android:name="android.permission.INTERNET"/>
-    <application android:icon="@drawable/icon" android:label="@string/app_name">
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <application 
+    	android:icon="@drawable/icon" 
+    	android:label="@string/app_name"
+    	android:debuggable="true">
         <activity android:name=".Viewer"
-                  android:label="@string/app_name">
+			android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

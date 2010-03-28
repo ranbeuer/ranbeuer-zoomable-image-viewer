@@ -2,6 +2,7 @@ package se.robertfoss.ChanImageBrowser;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +17,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.os.Bundle;
+import android.os.Environment;
+import android.widget.Gallery;
 import android.widget.ImageView;
 
 public class Viewer extends Activity {
@@ -25,7 +28,7 @@ public class Viewer extends Activity {
     private ArrayList<File> fileList;
 
     private int currentlyDisplayed;
-    private ImageView imgView;
+    private Gallery gallery;
     private FetcherManager man;
     private static final boolean isDebug = true;
     
@@ -37,15 +40,20 @@ public class Viewer extends Activity {
         fileList = new ArrayList<File>();
 
         currentlyDisplayed = -1;
-        imgView = (ImageView)findViewById(R.id.picView);
+        gallery = (Gallery)findViewById(R.id.gallery);
+        g.setAdapter(new ImageAdapter(this));
         
-        imgView.setImageResource(R.drawable.icon);
+        gallery.setImageResource(R.drawable.icon);
         printDebug("Initializing manager thread");
         man = new FetcherManager(this);
         printDebug("Running manager thread");
-        imgView.setImageResource(R.drawable.icon);
+        gallery.setImageResource(R.drawable.icon);
         man.execute((Void)null);
         
+    }
+    
+    public void onPause(){
+    	
     }
     
     
@@ -64,7 +72,7 @@ public class Viewer extends Activity {
     	Bitmap pic = getImgFromFile(fileList.get(index));
     	if (pic != null) {
     		printDebug("Displaying picture that isnt null");
-    		imgView.setImageBitmap(getImgFromFile(fileList.get(fileList.size()-1)));
+    		gallery.setImageBitmap(getImgFromFile(fileList.get(fileList.size()-1)));
     	} else {
     		printDebug("Trying to display null-picture");
     	}
@@ -74,9 +82,11 @@ public class Viewer extends Activity {
     public Bitmap getImgFromFile(File file){
     	
     	Bitmap pic = null;
-
+    	
+		File f = Environment.getExternalStorageDirectory();
+		File j = new File(f, "/4Chan/" + file.toString());
 		try {
-			InputStream is = openFileInput(file.toString());
+			FileInputStream is = new FileInputStream(j);
 			pic = BitmapFactory.decodeStream(is);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
