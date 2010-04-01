@@ -2,8 +2,7 @@ package se.robertfoss.ChanImageBrowser;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,15 +10,17 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.os.Bundle;
 import android.os.Environment;
-import android.widget.Gallery;
-import android.widget.ImageView;
+import android.view.View;
+import android.webkit.WebView;
+import android.widget.AdapterView;
+import android.widget.GridView;
+import android.widget.AdapterView.OnItemClickListener;
 
 public class Viewer extends Activity {
 	
@@ -27,10 +28,12 @@ public class Viewer extends Activity {
 
     private ArrayList<File> fileList;
 
-    private int currentlyDisplayed;
-    private Gallery gallery;
+    private GridView gridView;
+    private ImageAdapter imgAdapter;
     private FetcherManager man;
     private static final boolean isDebug = true;
+    private static final File baseDir = new  File(Environment.getExternalStorageDirectory(), "/4Chan/");
+    
     
     
     public void onCreate(Bundle savedInstanceState) {
@@ -38,20 +41,36 @@ public class Viewer extends Activity {
         setContentView(R.layout.main);
         
         fileList = new ArrayList<File>();
+        imgAdapter = new ImageAdapter(this);
 
-        currentlyDisplayed = -1;
-        gallery = (Gallery)findViewById(R.id.gallery);
-        g.setAdapter(new ImageAdapter(this));
+        gridView = (GridView)findViewById(R.id.gridview);
+        gridView.setAdapter(imgAdapter);
         
-        gallery.setImageResource(R.drawable.icon);
+        gridView.setOnItemClickListener(new OnItemClickListener(){
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int position,
+					long id) {
+				printDebug("Image " + position + " was clicked!");
+				getImgFromFile(imgAdapter.getItem(position));
+				WebView temp = new WebView(Viewer.this);
+				temp.loadUrl("file://" + ((File) imgAdapter.getItem(position)).toString() );
+
+				
+			}
+        	
+        });
+
+        
         printDebug("Initializing manager thread");
         man = new FetcherManager(this);
         printDebug("Running manager thread");
-        gallery.setImageResource(R.drawable.icon);
         man.execute((Void)null);
         
     }
     
+    
+    // Fix me, Im serial. IM SUPER SERIAAL GUYS!
     public void onPause(){
     	
     }
@@ -59,40 +78,27 @@ public class Viewer extends Activity {
     
     public void addCompleteImage(File file){
     	
-    	fileList.add(file);
-    	printDebug("New picture addded, " + file.toString() + " for a total of " + fileList.size());
-    	if (currentlyDisplayed == -1){
-    		currentlyDisplayed=0;
-    	}
-    	displayPicture(fileList.size()-1);
+		Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+
+		BitmapFactory.decodeFile(file.toString(), options);
+
+		fileList.add(file);
+		printDebug("New picture addded, " + file.toString() + " for a total of " + fileList.size());
+		addFileToAdapter(file);
     }
         
-    public void displayPicture(int index){
-    	printDebug("Pictures in storage: " + fileList.size());
-    	Bitmap pic = getImgFromFile(fileList.get(index));
-    	if (pic != null) {
-    		printDebug("Displaying picture that isnt null");
-    		gallery.setImageBitmap(getImgFromFile(fileList.get(fileList.size()-1)));
-    	} else {
-    		printDebug("Trying to display null-picture");
-    	}
+    public void addFileToAdapter(File file){
+    	imgAdapter.addItem(new File(baseDir, file.toString()));
+
     }
 
-    
-    public Bitmap getImgFromFile(File file){
+
+    public static Bitmap getImgFromFile(File file){
     	
-    	Bitmap pic = null;
-    	
-		File f = Environment.getExternalStorageDirectory();
-		File j = new File(f, "/4Chan/" + file.toString());
-		try {
-			FileInputStream is = new FileInputStream(j);
-			pic = BitmapFactory.decodeStream(is);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	
+    	File temp = new File(baseDir, file.toString());
+    	Bitmap pic = BitmapFactory.decodeFile(temp.toString());
+
     	return pic;
     }
     
@@ -102,7 +108,7 @@ public class Viewer extends Activity {
     	}
     }
     
-    private static InputStream getHTTPConnectionInputStream(String sUrl){
+    private static InputStream getHTTPConnection(String sUrl){
     	
     	URL url = null;
     	InputStream is = null;
@@ -128,47 +134,26 @@ public class Viewer extends Activity {
     }
     
     public static  String getUrlContent(String sUrl) throws IOException{
-    	BufferedReader rd = new BufferedReader(new InputStreamReader(getHTTPConnectionInputStream(sUrl)));
+    	BufferedReader rd = new BufferedReader(new InputStreamReader(getHTTPConnection(sUrl)));
     	String content = "", line;
-    	while ((line = rd.readLine())  != null){
+    	while ((line = rd.readLine()) != null){
     		content += line + "\n";
-    	}  return content;
+    	}
+    	return content;
     }
     
-    public static Bitmap getImgFromUrl(String sUrl) throws IOException  {
-    	final int TARGET_HEIGHT = 800;
-    	final int TARGET_WIDTH = 400;
+    public static File getFileFromUrl(String sUrl, String outputName) throws IOException  {
+    	InputStream in = getHTTPConnection(sUrl);
+    	File file = new File(baseDir, outputName);
+    	System.out.println("Saving image to: " + file.toString());
+    	FileOutputStream out = new FileOutputStream(file);
     	
-    	printDebug("Getting image content - " + sUrl);
-    	
-        InputStream is = getHTTPConnectionInputStream(sUrl);   
-        
-        Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-
-        BitmapFactory.decodeStream(is, null, options);
-
-	     // Only scale if we need to 
-	     Boolean scaleByHeight = Math.abs(options.outHeight - TARGET_HEIGHT) >= Math.abs(options.outWidth - TARGET_WIDTH);
-	     printDebug("Image size: " + options.outWidth + "x" + options.outHeight);
-	     if(options.outHeight * options.outWidth * 2 >= 150*150*2){
-	         // Load, scaling to smallest power of 2 that'll get it <= desired dimensions
-	         double sampleSize = scaleByHeight
-	             ? options.outHeight / TARGET_HEIGHT
-	             : options.outWidth / TARGET_WIDTH;
-	         options.inSampleSize = 
-	        	 (int)Math.pow(2d, Math.floor(
-	            		  Math.log(sampleSize)/Math.log(2d)));
-
-	     }
-	
-	     // Do the actual decoding
-	     options.inJustDecodeBounds = false;
-	     
-	     is.close();
-	     is = getHTTPConnectionInputStream(sUrl);
-	     Bitmap img = BitmapFactory.decodeStream(is, null, options);
-
-    	return img;
+        byte[] buf = new byte[4 * 1024]; // 4K buffer
+        int bytesRead;
+        while ((bytesRead = in.read(buf)) != -1) {
+          out.write(buf, 0, bytesRead);
+        }
+        in.close();
+    	return new File(outputName);
     }
 }

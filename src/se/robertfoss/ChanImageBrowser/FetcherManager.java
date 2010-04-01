@@ -1,18 +1,14 @@
 package se.robertfoss.ChanImageBrowser;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
+import android.app.ProgressDialog;
 import android.os.AsyncTask;
-import android.os.Environment;
 
 public class FetcherManager extends AsyncTask<Void, Void, Void> {
 
+	private ProgressDialog dialog;
 	private IndexFetcher indexFetcher;
 	private ArrayList<String> visitedUrls;
 	private ArrayList<String> urlList;
@@ -27,6 +23,7 @@ public class FetcherManager extends AsyncTask<Void, Void, Void> {
 		urlList = new ArrayList<String>();
 		indexFetcher = new IndexFetcher(this);
 		fetchers = new ArrayList<Fetcher>();
+		dialog = new ProgressDialog(parent);
 
 		for (int i = 0; i < NUMBER_OF_FETCHERS; i++) {
 			Viewer.printDebug("Fetcher-" + i + " created");
@@ -35,57 +32,39 @@ public class FetcherManager extends AsyncTask<Void, Void, Void> {
 		}
 	}
 
+	
+	// can use UI thread here
+	
+	protected void onPreExecute() {
+		this.dialog.setMessage("Fetching index...");
+		this.dialog.show();
+	}
+
 	public Void doInBackground(Void... params) {
-		Viewer.printDebug("		Running Fetcher \n");
 		indexFetcher.run();
-		while (urlList.size() == 0) {
-			try {
-				Viewer.printDebug("Manager is waiting..");
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+
+		parent.runOnUiThread(new Runnable() {
+			public void run() {
+				dialog.hide();
 			}
-		}
+		});
 
 		for (int i = 0; i < NUMBER_OF_FETCHERS; i++) {
-			Viewer.printDebug("		Fetcher-" + i + "Started");
+			Viewer.printDebug("		Fetcher-" + i + " started");
 			fetchers.get(i).execute();
 		}
 		return null;
 	}
+	
 
-	public synchronized void addCompleteImage(final File file, final Bitmap img) {
+	public synchronized void addCompleteImage(File file) {
 		Viewer.printDebug("Saving complete Image \n");
-
-		String storage_state = Environment.getExternalStorageState();
-
-		if (storage_state.contains("mounted")) {
-			File f = Environment.getExternalStorageDirectory();
-			File j = new File(f, "4Chan");
-			j.mkdirs();
-			File k = new File(j, file.toString());
-			try {
-				k.createNewFile();
-				FileOutputStream fos = new FileOutputStream(k);
-
-				img.compress(CompressFormat.JPEG, 100, fos);
-				fos.flush();
-				fos.close();
-				img.recycle();
-			} catch (Exception e) {
-				e.printStackTrace();
+		final File temp = file;
+		parent.runOnUiThread(new Runnable() {
+			public void run() {
+				parent.addCompleteImage(temp);
 			}
-			parent.runOnUiThread(new Runnable() {
-				public void run() {
-					parent.addCompleteImage(file);
-				}
-			});
-		}
-
-		/*
-		 * Message msg = Message.obtain(); msg.obj = file;
-		 * handler.handleMessage(msg);
-		 */
+		});
 	}
 
 	public synchronized String getNextImageName() {
@@ -109,4 +88,5 @@ public class FetcherManager extends AsyncTask<Void, Void, Void> {
 			urlList.add(url);
 		}
 	}
+
 }

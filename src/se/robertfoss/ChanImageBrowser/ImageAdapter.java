@@ -1,91 +1,94 @@
 package se.robertfoss.ChanImageBrowser;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Gallery;
+import android.widget.GridView;
 import android.widget.ImageView;
 
 public class ImageAdapter extends BaseAdapter {
-    int mGalleryItemBackground;
-    private Context mContext;
+	int mGalleryItemBackground;
+	private Context mContext;
 
-    private ArrayList<Bitmap> thumbnails;
-    private ArrayList<File> fileList;
+	private ArrayList<Bitmap> thumbnails;
+	private ArrayList<File> fileList;
+	private static final int TARGET_HEIGHT = 150;
+	private static final int TARGET_WIDTH = 120;
 
-    public ImageAdapter(Context c) {
-        mContext = c;
-        //TypedArray a = obtainStyledAttributes(android.R.styleable.Theme);
-        //mGalleryItemBackground = a.getResourceId(
-        //        android.R.styleable.Theme_galleryItemBackground, 0);
-        //a.recycle();
-    }
+	public ImageAdapter(Context c) {
+		super();
+		thumbnails = new ArrayList<Bitmap>();
+		fileList = new ArrayList<File>();
+		mContext = c;
+	}
 
-    public int getCount() {
-        return thumbnails.size();
-    }
+	public int getCount() {
+		return thumbnails.size();
+	}
 
-    public File getItem(int position) {
-        return fileList.get(position);
-    }
-    
-    public void addItem(File file){
-    	
-    	final int TARGET_HEIGHT = 100;
-    	final int TARGET_WIDTH = 150;
-    	
-    	Viewer.printDebug("Adding image to adapter - " + file.toString());
-    	
-        FileInputStream is = new FileInputStream(file);
-        
-        Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
+	public File getItem(int position) {
+		return fileList.get(position);
+	}
 
-        BitmapFactory.decodeFile(file.toString(), options);
+	public void addItem(File file) {
+		Viewer.printDebug("Adding image to adapter - " + file.toString());
 
-	     // Only scale if we need to 
-	     Boolean scaleByHeight = Math.abs(options.outHeight - TARGET_HEIGHT) >= Math.abs(options.outWidth - TARGET_WIDTH);
-	     
-	         // Load, scaling to smallest power of 2 that'll get it <= desired dimensions
-	         double sampleSize = scaleByHeight
-	             ? options.outHeight / TARGET_HEIGHT
-	             : options.outWidth / TARGET_WIDTH;
-	         options.inSampleSize = 
-	        	 (int)Math.pow(2d, Math.floor(
-	            		  Math.log(sampleSize)/Math.log(2d)));
+		Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
 
-	
-	     // Do the actual decoding
-	     options.inJustDecodeBounds = false;
-	     Bitmap img = BitmapFactory.decodeFile(file.toString(), options);
-	     
-	     fileList.add(file);
-	     thumbnails.add(img);
-    	BitmapFactory.decodeFile(file.toString());
-    }
+		BitmapFactory.decodeFile(file.toString(), options);
+		if (options.outHeight != -1 && options.outWidth != -1) {
+			Viewer.printDebug("Image is valid - " + file.toString());
+			// Only scale if we need to
+			Boolean scaleByHeight = Math.abs(options.outHeight - TARGET_HEIGHT) >= Math
+					.abs(options.outWidth - TARGET_WIDTH);
 
-    public long getItemId(int position) {
-        return position;
-    }
+			// Load, scaling to smallest power of 2 that'll get it <= desired
+			// dimensions
+			double sampleSize = scaleByHeight ? options.outHeight
+					/ TARGET_HEIGHT : options.outWidth / TARGET_WIDTH;
+			options.inSampleSize = (int) Math.pow(2d, Math.floor(Math
+					.log(sampleSize)
+					/ Math.log(2d)));
 
-    public View getView(int position, View convertView, ViewGroup parent) {
-        ImageView i = new ImageView(mContext);
+			// Do the actual decoding
+			options.inJustDecodeBounds = false;
+			Bitmap img = BitmapFactory.decodeFile(file.toString(), options);
 
-        i.setImageBitmap(thumbnails.get(position));
-        i.setLayoutParams(new Gallery.LayoutParams(150, 100));
-        i.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        //i.setBackgroundResource(mGalleryItemBackground);
+			fileList.add(file);
+			thumbnails.add(img);
+			ImageAdapter.this.notifyDataSetChanged();
+		} else {
+			Viewer.printDebug("	Image is invalid" + file.toString());
+		}
+	}
 
-        return i;
-    }
+	public long getItemId(int position) {
+		return position;
+	}
+
+	public View getView(int position, View convertView, ViewGroup parent) {
+
+        ImageView imageView;
+        if (convertView == null) {  // if it's not recycled, initialize some attributes
+            imageView = new ImageView(mContext);
+            imageView.setLayoutParams(new GridView.LayoutParams(TARGET_WIDTH, TARGET_HEIGHT));
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setPadding(8, 8, 8, 8);
+        } else {
+            imageView = (ImageView) convertView;
+        }
+
+        imageView.setImageBitmap(thumbnails.get(position));
+
+        return imageView;
+
+	}
 }

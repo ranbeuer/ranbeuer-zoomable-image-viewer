@@ -1,8 +1,6 @@
 package se.robertfoss.ChanImageBrowser;
 
 import java.io.File;
-
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 
 public class Fetcher extends AsyncTask<Void, Void, Void> {
@@ -14,16 +12,16 @@ public class Fetcher extends AsyncTask<Void, Void, Void> {
 	}
 
 	protected Void doInBackground(Void... params){
-		Viewer.printDebug("Running a Fetcher thread");
 		String inputFile = manager.getNextImageName();
 		while (inputFile != null){
 				try {
 					Viewer.printDebug("Fetching picture  -  " + inputFile);
-					Bitmap pic = Viewer.getImgFromUrl("http://images.4chan.org/b/src/" + inputFile);
+					File pic = Viewer.getFileFromUrl("http://images.4chan.org/b/src/" + inputFile, inputFile);
 
 					Viewer.printDebug("Fetcher is adding downloaded a picture");
 					if (pic != null){
-					manager.addCompleteImage(new File(inputFile), pic);
+					manager.addCompleteImage(pic);
+					Viewer.printDebug("manager.addCompleteImage(pic); " + pic.toString());
 					} else {
 						Viewer.printDebug(inputFile + " could'nt be parsed into a Bitmap");
 					}
