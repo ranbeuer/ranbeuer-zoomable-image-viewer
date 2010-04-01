@@ -21,9 +21,8 @@ public class Fetcher extends AsyncTask<Void, Void, Void> {
 					Viewer.printDebug("Fetcher is adding downloaded a picture");
 					if (pic != null){
 					manager.addCompleteImage(pic);
-					Viewer.printDebug("manager.addCompleteImage(pic); " + pic.toString());
 					} else {
-						Viewer.printDebug(inputFile + " could'nt be parsed into a Bitmap");
+						Viewer.printDebug("	" + inputFile + " could'nt be parsed into a Bitmap");
 					}
 				} catch (Exception e) {
 					Viewer.printDebug("An image wasnt downloaded correctly");
