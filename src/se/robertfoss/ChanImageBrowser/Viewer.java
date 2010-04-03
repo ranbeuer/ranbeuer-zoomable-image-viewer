@@ -11,8 +11,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import android.app.Activity;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.BitmapFactory.Options;
 import android.os.Bundle;
 import android.os.Environment;
@@ -38,13 +40,17 @@ public class Viewer extends Activity {
 	private static final boolean isDebug = true;
 	private static final File baseDir = new File(Environment
 			.getExternalStorageDirectory(), "/4Chan/");
-
-	public void onCreate(Bundle savedInstanceState) {
+//	private View currentView;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+		printDebug("		onCreate()");
 
 		fileList = new ArrayList<File>();
 		imgAdapter = new ImageAdapter(this);
+//		currentView = null;
 
 		gridView = (GridView) findViewById(R.id.gridview);
 		gridView.setAdapter(imgAdapter);
@@ -58,24 +64,30 @@ public class Viewer extends Activity {
 				getImgFromFile(imgAdapter.getItem(position));
 
 				
-//				WebView temp = new WebView(Viewer.this);
-//				temp.loadUrl("file://" + ((File)
+//				WebView temp2 = new WebView(Viewer.this);
+//				temp2.loadUrl("file://" + ((File)
 //				imgAdapter.getItem(position)).toString() );
+//				temp2.setBackgroundColor(Color.BLACK);
+
+				
 
 				ImageView temp = new ImageView(Viewer.this);
 
 				File file = (File) imgAdapter.getItem(position);
 				temp.setImageBitmap(getImgFromFile(file));
-
+				
 				temp.setOnClickListener(new OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						Viewer.this.setContentView(gridView);
+//						Viewer.this.currentView = null;
 						v.setVisibility(View.GONE);
+						
 
 					}
 				});
-
+				
+//				currentView = temp;
 				setContentView(temp);
 			}
 		});
@@ -86,11 +98,37 @@ public class Viewer extends Activity {
 		man.execute((Void) null);
 
 	}
+	
+	@Override
+	protected void onResume(){
+		super.onResume();
+		printDebug("		onResume()");
+//		if (currentView != null){
+//			setContentView(currentView);
+//		}
+	}
 
-	// Fix me, Im serial. IM SUPER SERIAAL GUYS!
-	public void onPause() {
+	@Override
+	protected void onPause() {
+		super.onPause();
+		printDebug("		onPause()");
+		//finish();
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		printDebug("		onDestroy()");
+		
 		finish();
 	}
+	
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+	  super.onConfigurationChanged(newConfig);
+	  //setContentView(R.layout.main);
+	}
+
 
 	public void addCompleteImage(File file) {
 
@@ -113,9 +151,10 @@ public class Viewer extends Activity {
 	public static Bitmap getImgFromFile(File file) {
 
 		Bitmap pic = BitmapFactory.decodeFile(file.toString());
-		if (pic == null)
+		if (pic == null) {
 			printDebug("	Tried to read image: " + file.toString());
 			printDebug("	Image from file is null");
+		}
 
 		return pic;
 	}
@@ -141,8 +180,8 @@ public class Viewer extends Activity {
 					.openConnection();
 			connection.setRequestMethod("GET");
 			connection.setDoOutput(true);
-			connection.setConnectTimeout(5000);
-			connection.setReadTimeout(5000);
+			connection.setConnectTimeout(15000);
+			connection.setReadTimeout(15000);
 			connection.connect();
 			is = connection.getInputStream();
 		} catch (IOException e) {
@@ -165,7 +204,9 @@ public class Viewer extends Activity {
 	public static File getFileFromUrl(String sUrl, String outputName)
 			throws IOException {
 		InputStream in = getHTTPConnection(sUrl);
+		baseDir.mkdirs();
 		File file = new File(baseDir, outputName);
+		
 		System.out.println("Saving image to: " + file.toString());
 		FileOutputStream out = new FileOutputStream(file);
 
