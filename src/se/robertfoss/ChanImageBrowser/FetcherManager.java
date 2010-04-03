@@ -9,7 +9,7 @@ import android.os.AsyncTask;
 public class FetcherManager extends AsyncTask<Void, Void, Void> {
 
 	private ProgressDialog dialog;
-	private IndexFetcher indexFetcher;
+	private PicIndex indexFetcher;
 	private ArrayList<String> visitedUrls;
 	private ArrayList<String> urlList;
 	private ArrayList<Fetcher> fetchers;
@@ -21,7 +21,7 @@ public class FetcherManager extends AsyncTask<Void, Void, Void> {
 		parent = view;
 		visitedUrls = new ArrayList<String>();
 		urlList = new ArrayList<String>();
-		indexFetcher = new IndexFetcher(this);
+		indexFetcher = new PicIndex(this);
 		fetchers = new ArrayList<Fetcher>();
 		dialog = new ProgressDialog(parent);
 

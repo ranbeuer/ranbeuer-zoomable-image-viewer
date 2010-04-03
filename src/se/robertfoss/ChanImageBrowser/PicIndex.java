@@ -3,7 +3,7 @@ package se.robertfoss.ChanImageBrowser;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class IndexFetcher extends Thread {
+public class PicIndex extends Thread {
 	
 	private FetcherManager manager;
 	String regex = "http://images.4chan.org/b/src/(\\d*).(jpg|gif|png)";
@@ -11,7 +11,7 @@ public class IndexFetcher extends Thread {
 	private Matcher matcher;
 	
 	
-	IndexFetcher(FetcherManager manager){
+	PicIndex(FetcherManager manager){
 		this.manager = manager;
 		imgID = Pattern.compile(regex);
 	}
