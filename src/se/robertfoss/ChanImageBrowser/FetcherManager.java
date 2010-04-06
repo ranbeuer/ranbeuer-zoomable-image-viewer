@@ -9,21 +9,21 @@ import android.os.AsyncTask;
 public class FetcherManager extends AsyncTask<Void, Void, Void> {
 
 	private ProgressDialog dialog;
-	private PicIndex indexFetcher;
+	private PicIndexer indexFetcher;
 	private ArrayList<String> visitedUrls;
 	private ArrayList<String> urlList;
 	private ArrayList<Fetcher> fetchers;
 	private final int NUMBER_OF_FETCHERS = 3;
 	private Viewer parent;
 
-	FetcherManager(Viewer view) {
+	FetcherManager(Viewer view, ProgressDialog dialog) {
 		Viewer.printDebug("Creating Fetchers \n");
 		parent = view;
 		visitedUrls = new ArrayList<String>();
 		urlList = new ArrayList<String>();
-		indexFetcher = new PicIndex(this);
+		indexFetcher = new PicIndexer(this);
 		fetchers = new ArrayList<Fetcher>();
-		dialog = new ProgressDialog(parent);
+		this.dialog = dialog;
 
 		for (int i = 0; i < NUMBER_OF_FETCHERS; i++) {
 			Viewer.printDebug("Fetcher-" + i + " created");
@@ -36,8 +36,8 @@ public class FetcherManager extends AsyncTask<Void, Void, Void> {
 	// can use UI thread here
 	
 	protected void onPreExecute() {
-		this.dialog.setMessage("Fetching index...");
-		this.dialog.show();
+		dialog.setMessage("Fetching index...");
+		dialog.show();
 	}
 
 	public Void doInBackground(Void... params) {
@@ -45,15 +45,26 @@ public class FetcherManager extends AsyncTask<Void, Void, Void> {
 
 		parent.runOnUiThread(new Runnable() {
 			public void run() {
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				dialog.hide();
 			}
 		});
 
 		for (int i = 0; i < NUMBER_OF_FETCHERS; i++) {
 			Viewer.printDebug("		Fetcher-" + i + " started");
-			fetchers.get(i).execute();
+			fetchers.get(i).start();
 		}
+		Viewer.printDebug("		All fetchers started, returning.");
 		return null;
+	}
+	
+	protected void onPostExecute() {
+		dialog.hide();
 	}
 	
 

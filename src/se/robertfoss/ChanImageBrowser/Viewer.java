@@ -11,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -18,14 +19,12 @@ import android.graphics.Color;
 import android.graphics.BitmapFactory.Options;
 import android.os.Bundle;
 import android.os.Environment;
-import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.PopupWindow;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class Viewer extends Activity {
@@ -40,7 +39,7 @@ public class Viewer extends Activity {
 	private static final boolean isDebug = true;
 	private static final File baseDir = new File(Environment
 			.getExternalStorageDirectory(), "/4Chan/");
-//	private View currentView;
+	private ProgressDialog dialog;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +49,9 @@ public class Viewer extends Activity {
 
 		fileList = new ArrayList<File>();
 		imgAdapter = new ImageAdapter(this);
-//		currentView = null;
+		dialog = new ProgressDialog(this);
+		printDebug("Initializing manager thread");
+		man = new FetcherManager(this, dialog);
 
 		gridView = (GridView) findViewById(R.id.gridview);
 		gridView.setAdapter(imgAdapter);
@@ -80,20 +81,16 @@ public class Viewer extends Activity {
 					@Override
 					public void onClick(View v) {
 						Viewer.this.setContentView(gridView);
-//						Viewer.this.currentView = null;
 						v.setVisibility(View.GONE);
 						
 
 					}
 				});
 				
-//				currentView = temp;
 				setContentView(temp);
 			}
 		});
 
-		printDebug("Initializing manager thread");
-		man = new FetcherManager(this);
 		printDebug("Running manager thread");
 		man.execute((Void) null);
 
@@ -103,16 +100,12 @@ public class Viewer extends Activity {
 	protected void onResume(){
 		super.onResume();
 		printDebug("		onResume()");
-//		if (currentView != null){
-//			setContentView(currentView);
-//		}
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
 		printDebug("		onPause()");
-		//finish();
 	}
 	
 	@Override
@@ -126,7 +119,6 @@ public class Viewer extends Activity {
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 	  super.onConfigurationChanged(newConfig);
-	  //setContentView(R.layout.main);
 	}
 
 

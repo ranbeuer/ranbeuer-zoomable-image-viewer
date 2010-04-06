@@ -1,9 +1,8 @@
 package se.robertfoss.ChanImageBrowser;
 
 import java.io.File;
-import android.os.AsyncTask;
 
-public class Fetcher extends AsyncTask<Void, Void, Void> {
+public class Fetcher extends Thread {
 	
 	private FetcherManager manager;
 	
@@ -11,7 +10,7 @@ public class Fetcher extends AsyncTask<Void, Void, Void> {
 		this.manager = manager; 
 	}
 
-	protected Void doInBackground(Void... params){
+	public void run(){
 		String inputFile = manager.getNextImageName();
 		while (inputFile != null){
 				try {
@@ -28,13 +27,7 @@ public class Fetcher extends AsyncTask<Void, Void, Void> {
 					Viewer.printDebug("An image wasnt downloaded correctly");
 					e.printStackTrace();
 				}
-				try {
-					Thread.sleep(150);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
 				inputFile = manager.getNextImageName();
 		}
-		return (Void)null;
 	}
 }
