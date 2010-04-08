@@ -10,6 +10,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+
+import se.robertfoss.MultiTouchZoom.TouchImageView;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.res.Configuration;
@@ -19,12 +22,12 @@ import android.graphics.Color;
 import android.graphics.BitmapFactory.Options;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.Display;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class Viewer extends Activity {
@@ -40,12 +43,16 @@ public class Viewer extends Activity {
 	private static final File baseDir = new File(Environment
 			.getExternalStorageDirectory(), "/4Chan/");
 	private ProgressDialog dialog;
+	private int displayHeight;
+	private int displayWidth;
+
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		super.setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		printDebug("		onCreate()");
+		printDebug("onCreate()");
 
 		fileList = new ArrayList<File>();
 		imgAdapter = new ImageAdapter(this);
@@ -55,6 +62,10 @@ public class Viewer extends Activity {
 
 		gridView = (GridView) findViewById(R.id.gridview);
 		gridView.setAdapter(imgAdapter);
+		
+		Display display = getWindowManager().getDefaultDisplay();
+		displayHeight = display.getHeight();
+		displayWidth = display.getWidth();
 
 		gridView.setOnItemClickListener(new OnItemClickListener() {
 
@@ -72,10 +83,10 @@ public class Viewer extends Activity {
 
 				
 
-				ImageView temp = new ImageView(Viewer.this);
+				TouchImageView temp = new TouchImageView(Viewer.this, gridView);
 
 				File file = (File) imgAdapter.getItem(position);
-				temp.setImageBitmap(getImgFromFile(file));
+				temp.setImage(getImgFromFile(file),displayWidth, displayHeight);
 				
 				temp.setOnClickListener(new OnClickListener() {
 					@Override
@@ -96,22 +107,26 @@ public class Viewer extends Activity {
 
 	}
 	
+	public void setCurrentView(View view){
+		Viewer.this.setContentView(view);
+	}
+	
 	@Override
 	protected void onResume(){
 		super.onResume();
-		printDebug("		onResume()");
+		printDebug("onResume()");
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		printDebug("		onPause()");
+		printDebug("onPause()");
 	}
 	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		printDebug("		onDestroy()");
+		printDebug("onDestroy()");
 		
 		finish();
 	}
