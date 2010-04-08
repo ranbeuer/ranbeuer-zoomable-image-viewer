@@ -80,7 +80,7 @@ public class TouchImageView extends ImageView {
 				case MotionEvent.ACTION_UP:
 					int xDiff = (int) Math.abs(event.getX() - start.x);
 					int yDiff = (int) Math.abs(event.getY() - start.y);
-					if (xDiff < 5 && yDiff < 5){
+					if (xDiff < 8 && yDiff < 8){
 						performClick();
 					}
 				case MotionEvent.ACTION_POINTER_UP:

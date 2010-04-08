@@ -6,12 +6,13 @@ import java.util.ArrayList;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 
-public class FetcherManager extends AsyncTask<Void, Void, Void> {
+public class FetcherManager extends AsyncTask<String, Void, Void> {
 
 	private ProgressDialog dialog;
-	private PicIndexer indexFetcher;
+	private Parser indexFetcher;
 	private ArrayList<String> visitedUrls;
-	private ArrayList<String> urlList;
+	private ArrayList<String> imageUrlList;
+	private ArrayList<String> linkUrlList;
 	private ArrayList<Fetcher> fetchers;
 	private final int NUMBER_OF_FETCHERS = 3;
 	private Viewer parent;
@@ -20,8 +21,8 @@ public class FetcherManager extends AsyncTask<Void, Void, Void> {
 		Viewer.printDebug("Creating Fetchers \n");
 		parent = view;
 		visitedUrls = new ArrayList<String>();
-		urlList = new ArrayList<String>();
-		indexFetcher = new PicIndexer(this);
+		imageUrlList = new ArrayList<String>();
+		linkUrlList = new ArrayList<String>();
 		fetchers = new ArrayList<Fetcher>();
 		this.dialog = dialog;
 
@@ -33,16 +34,25 @@ public class FetcherManager extends AsyncTask<Void, Void, Void> {
 	}
 
 	
-	// can use UI thread here
-	
+	@Override
 	protected void onPreExecute() {
 		dialog.setMessage("Fetching index...");
 		dialog.show();
 	}
 
-	public Void doInBackground(Void... params) {
-		indexFetcher.run();
+	@Override
+	public Void doInBackground(String... params) {
+		
 
+		String url = params[0];
+		String regex = params[1];
+		String moreUrlsRegex = params[2];
+		
+		ArrayList<String> imageList =  Parser.parseForStrings(url, regex);
+		for (String s : imageList){
+			addImageUrl(s);
+		}
+		/*  Useful code perhaps? Codeheap-Away!
 		parent.runOnUiThread(new Runnable() {
 			public void run() {
 				try {
@@ -53,17 +63,18 @@ public class FetcherManager extends AsyncTask<Void, Void, Void> {
 				}
 				dialog.hide();
 			}
-		});
+		});*/
 
 		for (int i = 0; i < NUMBER_OF_FETCHERS; i++) {
-			Viewer.printDebug("		Fetcher-" + i + " started");
+			Viewer.printDebug("Fetcher-" + i + " started");
 			fetchers.get(i).start();
 		}
-		Viewer.printDebug("		All fetchers started, returning.");
+		Viewer.printDebug("All fetchers started, returning.");
 		return null;
 	}
-	
-	protected void onPostExecute() {
+
+	@Override
+	protected void onPostExecute(Void param) {
 		dialog.hide();
 	}
 	
@@ -79,24 +90,34 @@ public class FetcherManager extends AsyncTask<Void, Void, Void> {
 	}
 
 	public synchronized String getNextImageName() {
-		if (urlList.size() != 0) {
+		if (imageUrlList.size() != 0) {
 
-			String temp = urlList.get(urlList.size() - 1);
+			String temp = imageUrlList.get(imageUrlList.size() - 1);
 			Viewer.printDebug("Delivered next url -  " + temp);
 			visitedUrls.add(temp);
-			Viewer.printDebug("Trying to remove url-" + urlList.size()
+			Viewer.printDebug("Trying to remove url-" + imageUrlList.size()
 					+ "  from urlList");
-			urlList.remove(urlList.size() - 1);
+			imageUrlList.remove(imageUrlList.size() - 1);
 			return temp;
 		}
 		return null;
 	}
 
-	public synchronized void addUrl(String url) {
-		Viewer.printDebug("Trying to add url");
-		if (!urlList.contains(url) && !visitedUrls.contains(url)) {
+	public void addImageUrl(String url) {
+		if (!imageUrlList.contains(url) && !visitedUrls.contains(url)) {
 			System.out.println("Added url  -  " + url);
-			urlList.add(url);
+			imageUrlList.add(url);
+		} else {
+			Viewer.printDebug("		Couldn't add url - " + url);
+		}
+	}
+	
+	public void addLinkUrl(String url) {
+		if (!imageUrlList.contains(url) && !visitedUrls.contains(url)) {
+			System.out.println("Added url  -  " + url);
+			linkUrlList.add(url);
+		} else {
+			Viewer.printDebug("		Couldn't add url - " + url);
 		}
 	}
 

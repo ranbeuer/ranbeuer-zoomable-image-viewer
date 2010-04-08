@@ -45,6 +45,10 @@ public class Viewer extends Activity {
 	private ProgressDialog dialog;
 	private int displayHeight;
 	private int displayWidth;
+	private static final String BASE_INDEX = "http://img.4chan.org/b/imgboard.html";
+	private static final String IMAGE_REGEX = "http://images.4chan.org/b/src/(\\d*).(jpg|gif|png)";
+	private static final String MORE_LINKS_REGEX = "http://";
+	
 
 	
 	@Override
@@ -103,7 +107,7 @@ public class Viewer extends Activity {
 		});
 
 		printDebug("Running manager thread");
-		man.execute((Void) null);
+		man.execute(BASE_INDEX, IMAGE_REGEX, MORE_LINKS_REGEX);
 
 	}
 	
