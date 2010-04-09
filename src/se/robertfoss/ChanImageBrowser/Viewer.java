@@ -15,7 +15,6 @@ import se.robertfoss.MultiTouchZoom.TouchImageView;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -26,7 +25,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class Viewer extends Activity {
@@ -39,18 +37,26 @@ public class Viewer extends Activity {
 	private ImageAdapter imgAdapter;
 	private FetcherManager man;
 	public static final boolean isDebug = true;
+	public static final File tempDir = new File(Environment
+			.getExternalStorageDirectory(), "/4Chan/temp/");
 	public static final File baseDir = new File(Environment
 			.getExternalStorageDirectory(), "/4Chan/");
 	private ProgressDialog dialog;
+
 	private static final String BASE_INDEX = "http://img.4chan.org/b/imgboard.html";
 	private static final String IMAGE_REGEX = "http://images.4chan.org/b/src/(\\d*).(jpg|gif|png)";
 	private static final String MORE_LINKS_REGEX = "http://";
-	
 
+	/*
+	 * Parse images from reddit.com/pics private static final String BASE_INDEX
+	 * = "http://www.reddit.com/r/pics/"; private static final String
+	 * IMAGE_REGEX = "http://imgur.com/[A-Za-z0-9]*.(jpg|gif|png)"; private
+	 * static final String MORE_LINKS_REGEX = "http://";
+	 */
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		//super.setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
+		// super.setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		printDebug("onCreate()");
@@ -63,7 +69,6 @@ public class Viewer extends Activity {
 
 		gridView = (GridView) findViewById(R.id.gridview);
 		gridView.setAdapter(imgAdapter);
-		
 
 		gridView.setOnItemClickListener(new OnItemClickListener() {
 
@@ -73,22 +78,21 @@ public class Viewer extends Activity {
 				printDebug("Image " + position + " was clicked!");
 				getImgFromFile(imgAdapter.getItem(position));
 
-
 				TouchImageView temp = new TouchImageView(Viewer.this);
 
 				File file = (File) imgAdapter.getItem(position);
-				temp.setImage(getImgFromFile(file),gridView.getWidth(), gridView.getHeight());
-				
+				temp.setImage(getImgFromFile(file), gridView.getWidth(),
+						gridView.getHeight());
+
 				temp.setOnClickListener(new OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						Viewer.this.setContentView(gridView);
 						v.setVisibility(View.GONE);
-						
 
 					}
 				});
-				
+
 				setContentView(temp);
 			}
 		});
@@ -97,13 +101,13 @@ public class Viewer extends Activity {
 		man.execute(BASE_INDEX, IMAGE_REGEX, MORE_LINKS_REGEX);
 
 	}
-	
-	public void setCurrentView(View view){
+
+	public void setCurrentView(View view) {
 		Viewer.this.setContentView(view);
 	}
-	
+
 	@Override
-	protected void onResume(){
+	protected void onResume() {
 		super.onResume();
 		printDebug("onResume()");
 	}
@@ -113,20 +117,25 @@ public class Viewer extends Activity {
 		super.onPause();
 		printDebug("onPause()");
 	}
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		if (tempDir.exists()) {
+			File[] files = tempDir.listFiles();
+			for (int i = 0; i < files.length; i++) {
+				files[i].delete();
+			}
+		}
 		printDebug("onDestroy()");
-		
+
 		finish();
 	}
-	
+
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
-	  super.onConfigurationChanged(newConfig);
+		super.onConfigurationChanged(newConfig);
 	}
-
 
 	public void addCompleteImage(File file) {
 
@@ -142,7 +151,7 @@ public class Viewer extends Activity {
 	}
 
 	public void addFileToAdapter(File file) {
-		imgAdapter.addItem(new File(baseDir, file.toString()));
+		imgAdapter.addItem(new File(tempDir, file.toString()));
 
 	}
 
@@ -178,8 +187,8 @@ public class Viewer extends Activity {
 					.openConnection();
 			connection.setRequestMethod("GET");
 			connection.setDoOutput(true);
-			connection.setConnectTimeout(15000);
-			connection.setReadTimeout(15000);
+			connection.setConnectTimeout(30000);
+			connection.setReadTimeout(60000);
 			connection.connect();
 			is = connection.getInputStream();
 		} catch (IOException e) {
@@ -202,9 +211,9 @@ public class Viewer extends Activity {
 	public static File getFileFromUrl(String sUrl, String outputName)
 			throws IOException {
 		InputStream in = getHTTPConnection(sUrl);
-		baseDir.mkdirs();
-		File file = new File(baseDir, outputName);
-		
+		tempDir.mkdirs();
+		File file = new File(tempDir, outputName);
+
 		System.out.println("Saving image to: " + file.toString());
 		FileOutputStream out = new FileOutputStream(file);
 

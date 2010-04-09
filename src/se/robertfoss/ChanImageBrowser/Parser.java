@@ -20,7 +20,7 @@ public class Parser{
 		matcher = pattern.matcher(html);
 		
 		while (matcher.find()){
-			imageList.add(matcher.group(1)+ "." + matcher.group(2));
+			imageList.add(matcher.group(0));
 		}
 		
 		matcher = null;

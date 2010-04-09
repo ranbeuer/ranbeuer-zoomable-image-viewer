@@ -11,7 +11,6 @@ import android.widget.Toast;
 public class FetcherManager extends AsyncTask<String, Void, Void> {
 
 	private ProgressDialog dialog;
-	private Parser indexFetcher;
 	private ArrayList<String> visitedUrls;
 	private ArrayList<String> imageUrlList;
 	private ArrayList<String> linkUrlList;
@@ -80,7 +79,7 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 
 	@Override
 	protected void onPostExecute(Void param) {
-		dialog.hide();
+		dialog.dismiss();
 	}
 	
 

@@ -11,23 +11,25 @@ public class Fetcher extends Thread {
 	}
 
 	public void run(){
-		String inputFile = manager.getNextImageName();
-		while (inputFile != null){
+		String inputUrl = manager.getNextImageName();
+		while (inputUrl != null){
 				try {
-					Viewer.printDebug("Fetching picture  -  " + inputFile);
-					File pic = Viewer.getFileFromUrl("http://images.4chan.org/b/src/" + inputFile, inputFile);
+					Viewer.printDebug("Fetching picture  -  " + inputUrl);
+					String[] fileName = inputUrl.split("/");
+					
+					File pic = Viewer.getFileFromUrl(inputUrl, fileName[fileName.length-1]);
 
 					Viewer.printDebug("Fetcher is adding downloaded a picture");
 					if (pic != null){
 					manager.addCompleteImage(pic);
 					} else {
-						Viewer.printDebug("	" + inputFile + " could'nt be parsed into a Bitmap");
+						Viewer.printDebug("	" + inputUrl + " could'nt be parsed into a Bitmap");
 					}
 				} catch (Exception e) {
 					Viewer.printDebug("An image wasnt downloaded correctly");
 					e.printStackTrace();
 				}
-				inputFile = manager.getNextImageName();
+				inputUrl = manager.getNextImageName();
 		}
 	}
 }
