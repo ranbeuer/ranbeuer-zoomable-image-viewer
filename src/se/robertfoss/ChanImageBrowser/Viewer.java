@@ -15,19 +15,18 @@ import se.robertfoss.MultiTouchZoom.TouchImageView;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.BitmapFactory.Options;
 import android.os.Bundle;
 import android.os.Environment;
-import android.view.Display;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class Viewer extends Activity {
@@ -39,12 +38,10 @@ public class Viewer extends Activity {
 	private GridView gridView;
 	private ImageAdapter imgAdapter;
 	private FetcherManager man;
-	private static final boolean isDebug = true;
-	private static final File baseDir = new File(Environment
+	public static final boolean isDebug = true;
+	public static final File baseDir = new File(Environment
 			.getExternalStorageDirectory(), "/4Chan/");
 	private ProgressDialog dialog;
-	private int displayHeight;
-	private int displayWidth;
 	private static final String BASE_INDEX = "http://img.4chan.org/b/imgboard.html";
 	private static final String IMAGE_REGEX = "http://images.4chan.org/b/src/(\\d*).(jpg|gif|png)";
 	private static final String MORE_LINKS_REGEX = "http://";
@@ -53,7 +50,7 @@ public class Viewer extends Activity {
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
+		//super.setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		printDebug("onCreate()");
@@ -67,9 +64,6 @@ public class Viewer extends Activity {
 		gridView = (GridView) findViewById(R.id.gridview);
 		gridView.setAdapter(imgAdapter);
 		
-		Display display = getWindowManager().getDefaultDisplay();
-		displayHeight = display.getHeight();
-		displayWidth = display.getWidth();
 
 		gridView.setOnItemClickListener(new OnItemClickListener() {
 
@@ -79,18 +73,11 @@ public class Viewer extends Activity {
 				printDebug("Image " + position + " was clicked!");
 				getImgFromFile(imgAdapter.getItem(position));
 
-				
-//				WebView temp2 = new WebView(Viewer.this);
-//				temp2.loadUrl("file://" + ((File)
-//				imgAdapter.getItem(position)).toString() );
-//				temp2.setBackgroundColor(Color.BLACK);
 
-				
-
-				TouchImageView temp = new TouchImageView(Viewer.this, gridView);
+				TouchImageView temp = new TouchImageView(Viewer.this);
 
 				File file = (File) imgAdapter.getItem(position);
-				temp.setImage(getImgFromFile(file),displayWidth, displayHeight);
+				temp.setImage(getImgFromFile(file),gridView.getWidth(), gridView.getHeight());
 				
 				temp.setOnClickListener(new OnClickListener() {
 					@Override

@@ -1,5 +1,6 @@
 package se.robertfoss.MultiTouchZoom;
 
+import se.robertfoss.ChanImageBrowser.Viewer;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
@@ -29,14 +30,12 @@ public class TouchImageView extends ImageView {
 	float oldDist = 1f;
 	
 	Context context;
-	View parentView;
-
 	
-	public TouchImageView(Context context, final View parentView) {
+	
+	public TouchImageView(Context context) {
 		super(context);
 		super.setClickable(true);
 		this.context = context;
-		this.parentView = parentView;
 		
 		matrix.setTranslate(1f, 1f);
 		setImageMatrix(matrix);
@@ -49,7 +48,9 @@ public class TouchImageView extends ImageView {
 				WrapMotionEvent event = WrapMotionEvent.wrap(rawEvent);
 
 				// Dump touch event to log
-				dumpEvent(event);
+				if (Viewer.isDebug == true){
+					dumpEvent(event);
+				}
 
 				// Handle touch events here...
 				switch (event.getAction() & MotionEvent.ACTION_MASK) {
@@ -120,7 +121,7 @@ public class TouchImageView extends ImageView {
 		matrix.postScale(scale, scale, mid.x, mid.y);
 		setImageMatrix(matrix);
 		
-		
+
 		// Center the image
 		float redundantYSpace = (float)displayHeight - (scale * (float)bm.getHeight()) ;
 		float redundantXSpace = (float)displayWidth - (scale * (float)bm.getWidth());

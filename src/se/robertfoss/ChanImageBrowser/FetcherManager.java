@@ -1,10 +1,12 @@
 package se.robertfoss.ChanImageBrowser;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
+import android.widget.Toast;
 
 public class FetcherManager extends AsyncTask<String, Void, Void> {
 
@@ -44,26 +46,29 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 	public Void doInBackground(String... params) {
 		
 
-		String url = params[0];
+		final String url = params[0];
 		String regex = params[1];
 		String moreUrlsRegex = params[2];
 		
-		ArrayList<String> imageList =  Parser.parseForStrings(url, regex);
+		ArrayList<String> imageList = new ArrayList<String>();
+		
+		try {
+			imageList =  Parser.parseForStrings(url, regex);
+		} catch (IOException e) {
+			parent.runOnUiThread(new Runnable() {
+				public void run() {
+					Toast.makeText(parent, "Error: Couldn't download " + url + "\n Exiting...", Toast.LENGTH_LONG);
+					parent.finish();
+				}
+			});
+			e.printStackTrace();
+		}
+		
+		
 		for (String s : imageList){
 			addImageUrl(s);
 		}
-		/*  Useful code perhaps? Codeheap-Away!
-		parent.runOnUiThread(new Runnable() {
-			public void run() {
-				try {
-					Thread.sleep(200);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				dialog.hide();
-			}
-		});*/
+
 
 		for (int i = 0; i < NUMBER_OF_FETCHERS; i++) {
 			Viewer.printDebug("Fetcher-" + i + " started");
