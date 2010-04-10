@@ -141,6 +141,7 @@ public class Viewer extends Activity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		man.destroyFetchers();
 		if (tempDir.exists()) {
 			File[] files = tempDir.listFiles();
 			for (int i = 0; i < files.length; i++) {

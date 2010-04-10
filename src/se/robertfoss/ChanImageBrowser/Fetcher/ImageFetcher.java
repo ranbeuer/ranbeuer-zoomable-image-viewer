@@ -12,7 +12,7 @@ public class ImageFetcher extends Thread {
 	private boolean isDone;
 	private final static int threadSleeptime = 5000;
 	private int counter;
-	private final static int TTL = 60000;
+	private final static int TTL = 120000;
 
 	ImageFetcher(FetcherManager manager) {
 		this.manager = manager;
