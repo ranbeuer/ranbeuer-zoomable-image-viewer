@@ -64,6 +64,8 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 		}
 		
 		
+		
+		
 		for (String s : imageList){
 			addImageUrl(s);
 		}

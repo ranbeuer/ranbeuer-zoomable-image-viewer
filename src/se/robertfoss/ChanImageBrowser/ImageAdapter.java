@@ -38,35 +38,39 @@ public class ImageAdapter extends BaseAdapter {
 	}
 
 	public void addItem(File file) {
-		Viewer.printDebug("Adding image to adapter - " + file.toString());
+		if (fileList.contains(file)) {
+			Viewer.printDebug("Adding image to adapter - " + file.toString());
 
-		Options options = new BitmapFactory.Options();
-		options.inJustDecodeBounds = true;
+			Options options = new BitmapFactory.Options();
+			options.inJustDecodeBounds = true;
 
-		BitmapFactory.decodeFile(file.toString(), options);
-		if (options.outHeight != -1 && options.outWidth != -1) {
-			Viewer.printDebug("Image is valid - " + file.toString());
-			// Only scale if we need to
-			Boolean scaleByHeight = !(Math.abs(options.outHeight - TARGET_HEIGHT) >= Math
-					.abs(options.outWidth - TARGET_WIDTH));
+			BitmapFactory.decodeFile(file.toString(), options);
+			if (options.outHeight != -1 && options.outWidth != -1) {
+				Viewer.printDebug("Image is valid - " + file.toString());
+				// Only scale if we need to
+				Boolean scaleByHeight = !(Math.abs(options.outHeight
+						- TARGET_HEIGHT) >= Math.abs(options.outWidth
+						- TARGET_WIDTH));
 
-			// Load, scaling to smallest power of 2 that'll get it <= desired
-			// dimensions
-			double sampleSize = scaleByHeight ? options.outHeight
-					/ TARGET_HEIGHT : options.outWidth / TARGET_WIDTH;
-			options.inSampleSize = (int) Math.pow(2d, Math.floor(Math
-					.log(sampleSize)
-					/ Math.log(2d)));
+				// Load, scaling to smallest power of 2 that'll get it <=
+				// desired
+				// dimensions
+				double sampleSize = scaleByHeight ? options.outHeight
+						/ TARGET_HEIGHT : options.outWidth / TARGET_WIDTH;
+				options.inSampleSize = (int) Math.pow(2d, Math.floor(Math
+						.log(sampleSize)
+						/ Math.log(2d)));
 
-			// Do the actual decoding
-			options.inJustDecodeBounds = false;
-			Bitmap img = BitmapFactory.decodeFile(file.toString(), options);
+				// Do the actual decoding
+				options.inJustDecodeBounds = false;
+				Bitmap img = BitmapFactory.decodeFile(file.toString(), options);
 
-			fileList.add(file);
-			thumbnails.add(img);
-			ImageAdapter.this.notifyDataSetChanged();
-		} else {
-			Viewer.printDebug("	Image is invalid" + file.toString());
+				fileList.add(file);
+				thumbnails.add(img);
+				ImageAdapter.this.notifyDataSetChanged();
+			} else {
+				Viewer.printDebug("	Image is invalid" + file.toString());
+			}
 		}
 	}
 
@@ -76,19 +80,21 @@ public class ImageAdapter extends BaseAdapter {
 
 	public View getView(int position, View convertView, ViewGroup parent) {
 
-        ImageView imageView;
-        if (convertView == null) {  // if it's not recycled, initialize some attributes
-            imageView = new ImageView(mContext);
-            imageView.setLayoutParams(new GridView.LayoutParams(TARGET_WIDTH, TARGET_HEIGHT));
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setPadding(8, 8, 8, 8);
-        } else {
-            imageView = (ImageView) convertView;
-        }
+		ImageView imageView;
+		if (convertView == null) { // if it's not recycled, initialize some
+									// attributes
+			imageView = new ImageView(mContext);
+			imageView.setLayoutParams(new GridView.LayoutParams(TARGET_WIDTH,
+					TARGET_HEIGHT));
+			imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+			imageView.setPadding(8, 8, 8, 8);
+		} else {
+			imageView = (ImageView) convertView;
+		}
 
-        imageView.setImageBitmap(thumbnails.get(position));
+		imageView.setImageBitmap(thumbnails.get(position));
 
-        return imageView;
+		return imageView;
 
 	}
 }

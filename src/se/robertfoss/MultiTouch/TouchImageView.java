@@ -1,4 +1,4 @@
-package se.robertfoss.MultiTouchZoom;
+package se.robertfoss.MultiTouch;
 
 import se.robertfoss.ChanImageBrowser.Viewer;
 import android.content.Context;

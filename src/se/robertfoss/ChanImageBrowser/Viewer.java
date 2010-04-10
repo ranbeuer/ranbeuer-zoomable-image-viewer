@@ -11,7 +11,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
-import se.robertfoss.MultiTouchZoom.TouchImageView;
+import se.robertfoss.MultiTouch.TouchImageView;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -47,16 +47,15 @@ public class Viewer extends Activity {
 	private static final String IMAGE_REGEX = "http://images.4chan.org/b/src/(\\d*).(jpg|gif|png)";
 	private static final String MORE_LINKS_REGEX = "http://";
 
-	/*
-	 * Parse images from reddit.com/pics private static final String BASE_INDEX
-	 * = "http://www.reddit.com/r/pics/"; private static final String
-	 * IMAGE_REGEX = "http://imgur.com/[A-Za-z0-9]*.(jpg|gif|png)"; private
-	 * static final String MORE_LINKS_REGEX = "http://";
-	 */
+
+//	Parse images from reddit.com/pics 
+//	private static final String BASE_INDEX = "http://www.reddit.com/r/pics/"; 
+//	private static final String IMAGE_REGEX = "http://imgur.com/[A-Za-z0-9]*.(jpg|gif|png)"; 
+//	private static final String MORE_LINKS_REGEX = "http://";
+
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		// super.setTheme(android.R.style.Theme_NoTitleBar_Fullscreen);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		printDebug("onCreate()");

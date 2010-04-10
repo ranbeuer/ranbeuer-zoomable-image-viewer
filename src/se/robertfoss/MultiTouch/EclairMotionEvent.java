@@ -1,4 +1,4 @@
-package se.robertfoss.MultiTouchZoom;
+package se.robertfoss.MultiTouch;
 
 import android.view.MotionEvent;
 
