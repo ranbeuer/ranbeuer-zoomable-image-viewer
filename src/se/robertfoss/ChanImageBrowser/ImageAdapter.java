@@ -38,7 +38,7 @@ public class ImageAdapter extends BaseAdapter {
 	}
 
 	public void addItem(File file) {
-		if (fileList.contains(file)) {
+		if (!fileList.contains(file)) {
 			Viewer.printDebug("Adding image to adapter - " + file.toString());
 
 			Options options = new BitmapFactory.Options();

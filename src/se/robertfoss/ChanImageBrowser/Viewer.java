@@ -3,18 +3,17 @@ package se.robertfoss.ChanImageBrowser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import se.robertfoss.ChanImageBrowser.Fetcher.FetcherManager;
+import se.robertfoss.ChanImageBrowser.Target.TargetUrl;
 import se.robertfoss.MultiTouch.TouchImageView;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -41,30 +40,52 @@ public class Viewer extends Activity {
 			.getExternalStorageDirectory(), "/4Chan/temp/");
 	public static final File baseDir = new File(Environment
 			.getExternalStorageDirectory(), "/4Chan/");
-	private ProgressDialog dialog;
-
-	private static final String BASE_INDEX = "http://img.4chan.org/b/imgboard.html";
-	private static final String IMAGE_REGEX = "http://images.4chan.org/b/src/(\\d*).(jpg|gif|png)";
-	private static final String MORE_LINKS_REGEX = "http://";
-
-
-//	Parse images from reddit.com/pics 
-//	private static final String BASE_INDEX = "http://www.reddit.com/r/pics/"; 
-//	private static final String IMAGE_REGEX = "http://imgur.com/[A-Za-z0-9]*.(jpg|gif|png)"; 
-//	private static final String MORE_LINKS_REGEX = "http://";
-
 	
+	private static TargetUrl imageTarget;
+	private static TargetUrl linkTarget;
+
+	// Parse images from reddit.com/pics
+	// private static final String BASE_INDEX = "http://www.reddit.com/r/pics/";
+	// private static final String IMAGE_REGEX =
+	// "http://imgur.com/[A-Za-z0-9]*.(jpg|gif|png)";
+	// private static final String MORE_LINKS_REGEX = "http://";
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		printDebug("onCreate()");
-
+		
 		fileList = new ArrayList<File>();
 		imgAdapter = new ImageAdapter(this);
-		dialog = new ProgressDialog(this);
+
+		
+		ArrayList<String> filler = new ArrayList<String>();
+		ArrayList<Integer> usableMatcherGroups = new ArrayList<Integer>();
+		
+		filler.add("http://images.4chan.org/b/src/");
+		usableMatcherGroups.add(Integer.valueOf(1));
+		filler.add(".");
+		usableMatcherGroups.add(Integer.valueOf(2));
+
+		imageTarget = new TargetUrl("http://img.4chan.org/b/imgboard.html",
+				"http://images.4chan.org/b/src/(\\d*).(jpg|gif|png)",
+				filler,
+				usableMatcherGroups);
+		
+		
+		filler = new ArrayList<String>();
+		usableMatcherGroups = new ArrayList<Integer>();
+		
+		filler.add("http://boards.4chan.org/b/res/");
+		usableMatcherGroups.add(Integer.valueOf(1));
+		linkTarget = new TargetUrl("http://img.4chan.org/b/imgboard.html",
+				"<a href=\"res/(\\d*)",
+				filler,
+				usableMatcherGroups);
+		
 		printDebug("Initializing manager thread");
-		man = new FetcherManager(this, dialog);
+		man = new FetcherManager(this, FetcherManager.FIRST_RUN, linkTarget, imageTarget);
 
 		gridView = (GridView) findViewById(R.id.gridview);
 		gridView.setAdapter(imgAdapter);
@@ -97,7 +118,7 @@ public class Viewer extends Activity {
 		});
 
 		printDebug("Running manager thread");
-		man.execute(BASE_INDEX, IMAGE_REGEX, MORE_LINKS_REGEX);
+		man.execute();
 
 	}
 
@@ -126,6 +147,8 @@ public class Viewer extends Activity {
 				files[i].delete();
 			}
 		}
+
+		man = null;
 		printDebug("onDestroy()");
 
 		finish();
@@ -149,7 +172,7 @@ public class Viewer extends Activity {
 		addFileToAdapter(file);
 	}
 
-	public void addFileToAdapter(File file) {
+	private void addFileToAdapter(File file) {
 		imgAdapter.addItem(new File(tempDir, file.toString()));
 
 	}
@@ -165,23 +188,18 @@ public class Viewer extends Activity {
 		return pic;
 	}
 
-	synchronized static void printDebug(String str) {
+	public synchronized static void printDebug(String str) {
 		if (isDebug) {
 			System.out.println(str);
 		}
 	}
 
-	private static InputStream getHTTPConnection(String sUrl) {
+	private static InputStream getHTTPConnection(String sUrl){
 
 		URL url = null;
 		InputStream is = null;
 		try {
 			url = new URL(sUrl);
-		} catch (MalformedURLException e1) {
-			printDebug("Malformed url");
-			e1.printStackTrace();
-		}
-		try {
 			HttpURLConnection connection = (HttpURLConnection) url
 					.openConnection();
 			connection.setRequestMethod("GET");
@@ -190,14 +208,13 @@ public class Viewer extends Activity {
 			connection.setReadTimeout(60000);
 			connection.connect();
 			is = connection.getInputStream();
-		} catch (IOException e) {
-			printDebug("Couldnt connect to: " + sUrl);
-			e.printStackTrace();
+		} catch (Exception e) {
+			printDebug(" 	Couldnt connect to: " + sUrl);
 		}
 		return is;
 	}
 
-	public static String getUrlContent(String sUrl) throws IOException {
+	public static String getUrlContent(String sUrl) throws Exception {
 		BufferedReader rd = new BufferedReader(new InputStreamReader(
 				getHTTPConnection(sUrl)));
 		String content = "", line;
@@ -208,7 +225,7 @@ public class Viewer extends Activity {
 	}
 
 	public static File getFileFromUrl(String sUrl, String outputName)
-			throws IOException {
+			throws Exception {
 		InputStream in = getHTTPConnection(sUrl);
 		tempDir.mkdirs();
 		File file = new File(tempDir, outputName);
