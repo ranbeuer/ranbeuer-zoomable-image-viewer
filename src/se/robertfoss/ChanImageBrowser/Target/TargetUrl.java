@@ -6,14 +6,14 @@ import java.util.regex.Matcher;
 public class TargetUrl {
 	
 	private String index;
-	private String commonUrl;
 	private String regexp;
 	private ArrayList<String> filler;
 	private ArrayList<Integer> usableMatcherGroups;
 	
 
 	/**
-	 * Handles the urls and regular expressions for the site and pictures you want
+	 * Handles the urls and regular expressions for the site and pictures you want.
+	 * 
 	 * 
 	 * @param index - The index to pull links from
 	 * @param commonUrl - The lowest common denominator of the urls  like "http://images.bollar.se/pics/"
@@ -27,6 +27,11 @@ public class TargetUrl {
 		
 	}
 	
+	/**
+	 * 
+	 * @param matcher
+	 * @return - Will return a string composed of position 0 of filler and 0 contents of matchergroup 0. And so on for 0+(n-1).
+	 */
 	public String getCompleteLinkUrl(Matcher matcher){
 		StringBuilder sb = new StringBuilder();
 		int maxLength;
