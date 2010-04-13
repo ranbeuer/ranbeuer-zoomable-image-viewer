@@ -1,7 +1,6 @@
 package se.robertfoss.ChanImageBrowser.Fetcher;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import se.robertfoss.ChanImageBrowser.Viewer;
