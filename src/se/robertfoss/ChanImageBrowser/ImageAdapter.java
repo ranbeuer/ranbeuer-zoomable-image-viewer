@@ -37,6 +37,24 @@ public class ImageAdapter extends BaseAdapter {
 		return fileList.get(position);
 	}
 
+	public void deleteXFirstImages(int number){
+		number = thumbnails.size() < number ? thumbnails.size() : number ;
+		
+		for (int i = 0; i < number; i++){
+			thumbnails.remove(i);
+			fileList.remove(i);
+		}
+		
+		ArrayList<Bitmap> newThumbnails = new ArrayList<Bitmap>();
+		ArrayList<File> newFileList = new ArrayList<File>();
+		newThumbnails.addAll(thumbnails);
+		newFileList.addAll(fileList);
+		thumbnails = newThumbnails;
+		fileList = newFileList;
+		ImageAdapter.this.notifyDataSetChanged();
+	}
+	
+	
 	public void addItem(File file) {
 		if (!fileList.contains(file)) {
 			Viewer.printDebug("Adding image to adapter - " + file.toString());
