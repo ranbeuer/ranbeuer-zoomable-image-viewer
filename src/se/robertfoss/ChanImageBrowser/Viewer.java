@@ -140,7 +140,6 @@ public class Viewer extends Activity {
 
 	@Override
 	protected void onDestroy() {
-		super.onDestroy();
 		man.destroyFetchers();
 		if (tempDir.exists()) {
 			File[] files = tempDir.listFiles();
@@ -151,7 +150,8 @@ public class Viewer extends Activity {
 
 		man = null;
 		printDebug("onDestroy()");
-
+		
+		super.onDestroy();
 		finish();
 	}
 
