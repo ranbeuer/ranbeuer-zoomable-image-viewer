@@ -10,29 +10,24 @@ public class ImageFetcher extends Thread {
 
 	private FetcherManager manager;
 	private boolean isDone;
-	private final static int threadSleeptime = 5000;
-	private int counter;
-	private final static int TTL = 120000;
+	private final static int THREAD_SLEEP_TIME = 5000;
+
 
 	ImageFetcher(FetcherManager manager) {
 		this.manager = manager;
 		isDone = false;
-		counter = 0;
 	}
 
 	public void done() {
 		isDone = true;
 	}
-	public void moreWork() {
-		isDone = false;
-	}
 
 	public void run() {
 		isDone = false;
 		String inputUrl;
-		while (true && TTL > counter) {
-			while (!isDone && (inputUrl = manager.getNextImageName()) != null) {
-				counter = 0;
+		while (!isDone) {
+			while (manager.getNbrImagesToDownload() > 0 && 
+					(inputUrl = manager.getNextImageName()) != null) {
 
 				Viewer.printDebug("Fetching picture  -  " + inputUrl);
 				String[] fileName = inputUrl.split("/");
@@ -57,16 +52,16 @@ public class ImageFetcher extends Thread {
 							+ " could'nt be parsed into a Bitmap");
 				}
 				inputUrl = manager.getNextImageName();
+				yield();
 			}
 			
 			// Wait for new data
 			try {
-				Viewer.printDebug("An ImageFetcher is sleeping, time left to live: " + (TTL - counter));
-				counter += threadSleeptime;
-				Thread.sleep(threadSleeptime);
+				Thread.sleep(THREAD_SLEEP_TIME);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+			yield();
 		}
 	}
 }
