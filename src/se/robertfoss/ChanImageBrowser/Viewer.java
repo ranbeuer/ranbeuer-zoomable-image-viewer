@@ -20,6 +20,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -41,6 +43,14 @@ public class Viewer extends Activity {
 	public static final File baseDir = new File(Environment
 			.getExternalStorageDirectory(), "/4Chan/");
 	
+	public static final int NBR_IMAGES_TO_DOWNLOAD_DIRECTLY = 16;
+	public static final int NBR_IMAGES_TO_DOWNLOAD_INCREMENT = 16;
+	public static final int NBR_IMAGES_TO_DOWNLOAD_AHEAD = 32;
+	public static final int NBR_IMAGES_TO_DISPLAY_MAX = 38;
+	
+	private static final int MENU_CLEAR = 0;
+	private static final int MENU_MORE = 1;
+	
 	private static TargetUrl imageTarget;
 	private static TargetUrl linkTarget;
 
@@ -57,7 +67,7 @@ public class Viewer extends Activity {
 		printDebug("onCreate()");
 		
 		fileList = new ArrayList<File>();
-		imgAdapter = new ImageAdapter(this);
+		imgAdapter = new ImageAdapter(this, NBR_IMAGES_TO_DISPLAY_MAX);
 
 		
 		ArrayList<String> filler = new ArrayList<String>();
@@ -85,7 +95,10 @@ public class Viewer extends Activity {
 				usableMatcherGroups);
 		
 		printDebug("Initializing manager thread");
-		man = new FetcherManager(this, FetcherManager.FIRST_RUN, linkTarget, imageTarget);
+		man = new FetcherManager(this,
+				NBR_IMAGES_TO_DOWNLOAD_DIRECTLY,
+				linkTarget, 
+				imageTarget);
 
 		gridView = (GridView) findViewById(R.id.gridview);
 		gridView.setAdapter(imgAdapter);
@@ -159,6 +172,29 @@ public class Viewer extends Activity {
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
 	}
+	
+	/* Creates the menu items */
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    menu.add(0, MENU_CLEAR, 0, "Clear");
+	    menu.add(0, MENU_MORE, 0, "More");
+	    return true;
+	}
+
+	/* Handles item selections */
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    switch (item.getItemId()) {
+	    case MENU_CLEAR:
+	        imgAdapter.clearContents();
+	        man.downloadXAdditionalImages(NBR_IMAGES_TO_DOWNLOAD_DIRECTLY - man.getNumberOfImageToDownload());
+	        return true;
+	    case MENU_MORE:
+	        int imagesForDisplay = man.getNbrImagesToDownload() + imgAdapter.getCount();
+	        int imagesToAdd = NBR_IMAGES_TO_DISPLAY_MAX - imagesForDisplay;
+	        imagesToAdd = imagesToAdd > 16 ? 16 : imagesToAdd;
+	        return true;
+	    }
+	    return false;
+	}
 
 	public void addCompleteImage(File file) {
 
@@ -177,6 +213,17 @@ public class Viewer extends Activity {
 		imgAdapter.addItem(new File(tempDir, file.toString()));
 
 	}
+	
+	public void downloadMoreImages(int number){
+		imgAdapter.deleteXFirstImages(number);
+		man.downloadXAdditionalImages(number);
+	}
+
+	public synchronized static void printDebug(String str) {
+		if (isDebug) {
+			System.out.println(str);
+		}
+	}
 
 	public static Bitmap getImgFromFile(File file) {
 
@@ -187,12 +234,6 @@ public class Viewer extends Activity {
 		}
 
 		return pic;
-	}
-
-	public synchronized static void printDebug(String str) {
-		if (isDebug) {
-			System.out.println(str);
-		}
 	}
 
 	private static InputStream getHTTPConnection(String sUrl){

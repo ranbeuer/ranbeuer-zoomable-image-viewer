@@ -26,9 +26,10 @@ public class ImageFetcher extends Thread {
 		isDone = false;
 		String inputUrl;
 		while (!isDone) {
+			
 			while (manager.getNbrImagesToDownload() > 0 && 
 					(inputUrl = manager.getNextImageName()) != null) {
-
+				System.out.println("Images left to download: " + manager.getNbrImagesToDownload());
 				Viewer.printDebug("Fetching picture  -  " + inputUrl);
 				String[] fileName = inputUrl.split("/");
 

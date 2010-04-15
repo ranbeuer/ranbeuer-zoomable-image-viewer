@@ -2,6 +2,7 @@ package se.robertfoss.ChanImageBrowser;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -19,14 +20,18 @@ public class ImageAdapter extends BaseAdapter {
 
 	private ArrayList<Bitmap> thumbnails;
 	private ArrayList<File> fileList;
+	private LinkedList<File> bufferFileList;
 	private static final int TARGET_HEIGHT = 150;
 	private static final int TARGET_WIDTH = 120;
+	private int maxImagesToDisplay;
 
-	public ImageAdapter(Context c) {
+	public ImageAdapter(Context c, int maxImagesToDisplay) {
 		super();
 		thumbnails = new ArrayList<Bitmap>();
 		fileList = new ArrayList<File>();
+		bufferFileList = new LinkedList<File>();
 		mContext = c;
+		this.maxImagesToDisplay = maxImagesToDisplay;
 	}
 
 	public int getCount() {
@@ -54,8 +59,24 @@ public class ImageAdapter extends BaseAdapter {
 		ImageAdapter.this.notifyDataSetChanged();
 	}
 	
+	public void clearContents(){
+		thumbnails = new ArrayList<Bitmap>();
+		fileList = new ArrayList<File>();
+		ImageAdapter.this.notifyDataSetChanged();
+	}
 	
 	public void addItem(File file) {
+		if (getCount() >= maxImagesToDisplay){
+			bufferFileList.add(file);
+		} else if (!bufferFileList.isEmpty()){
+			privAddItem(bufferFileList.poll());
+			bufferFileList.add(file);
+		} else {
+			privAddItem(file);
+		}
+	}
+	
+	private void privAddItem(File file) {
 		if (!fileList.contains(file)) {
 			Viewer.printDebug("Adding image to adapter - " + file.toString());
 

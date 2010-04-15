@@ -11,6 +11,7 @@ public class ThreadFetcher extends Thread {
 	private FetcherManager manager;
 	private boolean isDone;
 	private TargetUrl imageTarget;
+	private final static int IMAGE_DOWNLOAD_THRESHOLD = 12;
 
 	ThreadFetcher(FetcherManager manager, TargetUrl imageTarget) {
 		this.manager = manager;
@@ -22,36 +23,40 @@ public class ThreadFetcher extends Thread {
 		isDone = true;
 	}
 
-	public void run(){
+	public void run() {
 		isDone = false;
-		String url = manager.getNextUrl();
-		while (!isDone && url  != null) {
-			
-			String inputHtml = null;
-			do {
-				Viewer.printDebug("Fetching images from " + url);
-				try {
-					Thread.sleep(15000);
-					inputHtml = Viewer.getUrlContent(url);
-				} catch (Exception e) {
-					Viewer.printDebug(" 	Unable to fetch thread - " + url);
-					manager.toastInUI("Unable to fetch thread - " + url,
-							Toast.LENGTH_LONG);
+
+		while (!isDone) {
+			String url;
+			while (manager.getNbrImageLinks() < IMAGE_DOWNLOAD_THRESHOLD
+					&& (url = manager.getNextUrl()) != null) {
+				
+				String inputHtml = null;
+				do {
+					Viewer.printDebug("Fetching images from " + url);
+					try {
+						inputHtml = Viewer.getUrlContent(url);
+					} catch (Exception e) {
+						Viewer.printDebug(" 	Unable to fetch thread - " + url);
+						manager.toastInUI("Unable to fetch thread - " + url,
+								Toast.LENGTH_LONG);
+					}
+				} while (inputHtml == null);
+				// "" Is what gets return if nothing gets returned, null is
+				// returned
+				// if something breaks :S
+
+				// Parse for images and add to managers list
+				ArrayList<String> tempList = Parser.parseForStrings(inputHtml,
+						imageTarget);
+				for (String str : tempList) {
+					manager.addImageUrl(str);
 				}
-			} while (inputHtml == null);
-			// "" Is what gets return if nothing gets returned, null is returned
-			// if something breaks :S
 
-			// Parse for images and add to managers list
-			ArrayList<String> tempList = Parser.parseForStrings(inputHtml,
-					imageTarget);
-			for (String str : tempList) {
-				manager.addImageUrl(str);
+				url = manager.getNextUrl();
+
+				yield();
 			}
-
-			url = manager.getNextUrl();
-			manager.resumeImageFetchers();
-			yield();
 		}
 	}
 }

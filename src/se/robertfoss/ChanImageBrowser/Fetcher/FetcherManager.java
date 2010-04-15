@@ -7,39 +7,47 @@ import se.robertfoss.ChanImageBrowser.Viewer;
 import se.robertfoss.ChanImageBrowser.Target.TargetUrl;
 
 import android.app.ProgressDialog;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
 public class FetcherManager extends AsyncTask<String, Void, Void> {
 
-	public final static int FIRST_RUN = 0;
-	public final static int LATER_RUN = 1;
-	
+	@SuppressWarnings("unused")
 	private TargetUrl imageTarget;
+	@SuppressWarnings("unused")
 	private TargetUrl linkTarget;
-	
+
 	private ProgressDialog dialog;
 	private ArrayList<String> visitedUrls;
 	private ArrayList<String> imageUrlList;
 	private ArrayList<String> linkUrlList;
-	
+
 	private IndexFetcher indexfetcher;
 	private ArrayList<ImageFetcher> imagefetchers;
 	private ArrayList<ThreadFetcher> threadfetchers;
-	
+
 	private final int MAX_IMAGEFETCHERS = 3;
 	private final int MAX_THREADFETCHERS = 1;
-	private int currentRun;
 	private Viewer parent;
+	private int imagesToDownload;
 
 	/**
 	 * 
-	 * @param view - Parent view
-	 * @param runType - Type of run, first or any later run
-	 * @param linkTarget - Urlpackage for the links
-	 * @param imageTarget - Urlpackage for the images
+	 * @param view
+	 *            - Parent view
+	 * @param runType
+	 *            - Type of run, first or any later run
+	 * @param imagesToDownload
+	 *            - The number of images to download
+	 * @param linkTarget
+	 *            - Urlpackage for the links
+	 * @param imageTarget
+	 *            - Urlpackage for the images
 	 */
-	public FetcherManager(Viewer view, int runType, TargetUrl linkTarget, TargetUrl imageTarget) {
+	public FetcherManager(Viewer view, int imagesToDownload,
+			TargetUrl linkTarget, TargetUrl imageTarget) {
 		Viewer.printDebug("Creating Fetchers \n");
 		parent = view;
 		visitedUrls = new ArrayList<String>();
@@ -48,11 +56,11 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 		imagefetchers = new ArrayList<ImageFetcher>();
 		threadfetchers = new ArrayList<ThreadFetcher>();
 		dialog = new ProgressDialog(view);
-		
-		currentRun = runType;
+
 		this.imageTarget = imageTarget;
 		this.linkTarget = linkTarget;
-		
+		this.imagesToDownload = imagesToDownload;
+
 		indexfetcher = new IndexFetcher(this, linkTarget, imageTarget);
 
 		for (int i = 0; i < MAX_IMAGEFETCHERS; i++) {
@@ -60,7 +68,7 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 			ImageFetcher temp = new ImageFetcher(this);
 			imagefetchers.add(temp);
 		}
-		
+
 		for (int i = 0; i < MAX_THREADFETCHERS; i++) {
 			Viewer.printDebug("ThreadFetcher-" + i + " created");
 			ThreadFetcher temp = new ThreadFetcher(this, imageTarget);
@@ -68,7 +76,6 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 		}
 	}
 
-	
 	@Override
 	protected void onPreExecute() {
 		setDialogMessage("Fetching index..");
@@ -77,8 +84,8 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 
 	@Override
 	public Void doInBackground(String... params) {
-	
-		indexfetcher.run();
+
+		indexfetcher.start();
 		for (int i = 0; i < MAX_THREADFETCHERS; i++) {
 			Viewer.printDebug("ThreadFetcher-" + i + " resumed");
 			threadfetchers.get(i).start();
@@ -87,8 +94,17 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 			Viewer.printDebug("ImageFetcher-" + i + " resumed");
 			imagefetchers.get(i).start();
 		}
-		
-		
+
+		// Wait until images can be downloaded
+		while (imageUrlList.size() == 0) {
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		destroyDialog();
+
 		return null;
 	}
 
@@ -96,63 +112,12 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 	protected void onPostExecute(Void param) {
 		destroyDialog();
 	}
-	
-	public void pause(){
-		Viewer.printDebug("Threads owned by manager, PAUSED");
-		for (ImageFetcher f : imagefetchers){
-			f.done();
-		}
-		for (ThreadFetcher f : threadfetchers){
-			f.done();
-		}
-	}
-	
-	public void resume(){
-		Viewer.printDebug("Resuming threads owned by manager");
-		for (int i = 0; i < MAX_IMAGEFETCHERS; i++) {
-			Viewer.printDebug("ImageFetcher-" + i + " resumed");
-			imagefetchers.get(i).moreWork();
-		}
-		
-//		for (int i = 0; i < MAX_THREADFETCHERS; i++) {
-//			Viewer.printDebug("ThreadFetcher-" + i + " resumed");
-//			threadfetchers.get(i).start();
-//		}
-	}
-	
-	public synchronized void resumeImageFetchers(){
-		for (int i = 0; i < MAX_IMAGEFETCHERS; i++) {
-			Viewer.printDebug("ImageFetcher-" + i + " resumed");
-			imagefetchers.get(i).moreWork();
-		}
-	}
-	
-	public void pauseImageFetchers(){
-		Viewer.printDebug("ImageFetchers paused");
-		for (ImageFetcher f : imagefetchers){
-			f.done();
-		}
-	}
-	
-//	public synchronized void resumeThreadFetchers(){
-//		for (int i = 0; i < MAX_THREADFETCHERS; i++) {
-//			Viewer.printDebug("ThreadFetcher-" + i + " resumed");
-//			threadfetchers.get(i).start();
-//		}
-//	}
-	
-	public void pauseThreadFetchers(){
-		Viewer.printDebug("ThreadFetchers paused");
-		for (ThreadFetcher f : threadfetchers){
-			f.done();
-		}
-	}
-	
-	public synchronized void destroyFetchers(){
+
+	public synchronized void destroyFetchers() {
 		for (int i = 0; i < imagefetchers.size(); i++) {
 			imagefetchers.get(i).done();
 			imagefetchers.remove(i);
-			
+
 			Viewer.printDebug("ImageFetcher-" + i + " destroyed");
 		}
 		for (int i = 0; i < threadfetchers.size(); i++) {
@@ -160,22 +125,29 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 			threadfetchers.remove(i);
 			Viewer.printDebug("ThreadFetcher-" + i + " destroyed");
 		}
+		indexfetcher.done();
 		indexfetcher = null;
 	}
-	
+
 	public synchronized void addCompleteImage(File file) {
 		Viewer.printDebug("Saving complete Image \n");
 		final File temp = file;
-		parent.runOnUiThread(new Runnable() {
-			public void run() {
-				parent.addCompleteImage(temp);
-			}
-		});
+
+		// Test if the file is a legitimate image and then add
+		Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		if (BitmapFactory.decodeFile(file.toString(), options) == null) {
+			imagesToDownload -= 1;
+			parent.runOnUiThread(new Runnable() {
+				public void run() {
+					parent.addCompleteImage(temp);
+				}
+			});
+		}
 	}
 
 	public synchronized String getNextImageName() {
 		if (imageUrlList.size() != 0) {
-
 			String temp = imageUrlList.get(imageUrlList.size() - 1);
 			Viewer.printDebug("Delivered next image-url " + temp);
 			visitedUrls.add(temp);
@@ -184,7 +156,7 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 		}
 		return null;
 	}
-	
+
 	public synchronized String getNextUrl() {
 		if (linkUrlList.size() != 0) {
 
@@ -206,7 +178,7 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 			Viewer.printDebug("		Couldn't image-add url - " + url);
 		}
 	}
-	
+
 	public synchronized void addLinkUrl(String url) {
 		if (!linkUrlList.contains(url) && !visitedUrls.contains(url)) {
 			System.out.println("Added link-url  -  " + url);
@@ -215,46 +187,57 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 			Viewer.printDebug("		Couldn't add link-url - " + url);
 		}
 	}
-	
-	public synchronized void toastInUI(final String str, final int duration){
+
+	public synchronized void toastInUI(final String str, final int duration) {
 		parent.runOnUiThread(new Runnable() {
 			public void run() {
 				Toast.makeText(parent, str, Toast.LENGTH_SHORT);
 			}
 		});
 	}
-	
-	private void enableDialog(){
-		if (currentRun == FIRST_RUN){
-			parent.runOnUiThread(new Runnable() {
-				public void run() {
-					dialog.show();
-				}
-			});
-			
-		}
+
+	private void enableDialog() {
+		parent.runOnUiThread(new Runnable() {
+			public void run() {
+				dialog.show();
+			}
+		});
 	}
-	
-	private void destroyDialog(){
-		if (currentRun == FIRST_RUN){
-			parent.runOnUiThread(new Runnable() {
-				public void run() {
-					dialog.dismiss();
-				}
-			});
-		}
+
+	private void destroyDialog() {
+		parent.runOnUiThread(new Runnable() {
+			public void run() {
+				dialog.dismiss();
+			}
+		});
 	}
-	
-	private void setDialogMessage(final String str){
-		if (currentRun == FIRST_RUN){
-			parent.runOnUiThread(new Runnable() {
-				public void run() {
-					dialog.setMessage(str);
-				}
-			});
-		} else {
-			toastInUI("str", Toast.LENGTH_SHORT);
-		}
+
+	private void setDialogMessage(final String str) {
+		parent.runOnUiThread(new Runnable() {
+			public void run() {
+				dialog.setMessage(str);
+			}
+		});
+	}
+
+	public void downloadXAdditionalImages(int number) {
+		imagesToDownload += number;
+	}
+
+	public int getNumberOfImageToDownload() {
+		return imagesToDownload;
+	}
+
+	public int getNbrImagesToDownload() {
+		return imagesToDownload;
+	}
+
+	public int getNbrImageLinks() {
+		return imageUrlList.size();
+	}
+
+	public int getNbrUrlLinks() {
+		return linkUrlList.size();
 	}
 
 }
