@@ -10,7 +10,6 @@ import android.app.ProgressDialog;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.os.AsyncTask;
-import android.widget.Toast;
 
 public class FetcherManager extends AsyncTask<String, Void, Void> {
 
@@ -28,7 +27,7 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 	private ArrayList<ImageFetcher> imagefetchers;
 	private ArrayList<ThreadFetcher> threadfetchers;
 
-	private final int MAX_IMAGEFETCHERS = 3;
+	private final int MAX_IMAGEFETCHERS = 2;
 	private final int MAX_THREADFETCHERS = 1;
 	private Viewer parent;
 	private int imagesToDownload;
@@ -186,14 +185,6 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 		} else {
 			Viewer.printDebug("		Couldn't add link-url - " + url);
 		}
-	}
-
-	public synchronized void toastInUI(final String str, final int duration) {
-		parent.runOnUiThread(new Runnable() {
-			public void run() {
-				Toast.makeText(parent, str, Toast.LENGTH_SHORT);
-			}
-		});
 	}
 
 	private void enableDialog() {

@@ -2,8 +2,8 @@ package se.robertfoss.ChanImageBrowser.Fetcher;
 
 import java.util.ArrayList;
 
-import android.widget.Toast;
 
+import se.robertfoss.ChanImageBrowser.NetworkData;
 import se.robertfoss.ChanImageBrowser.Viewer;
 import se.robertfoss.ChanImageBrowser.Target.TargetUrl;
 
@@ -35,11 +35,9 @@ public class ThreadFetcher extends Thread {
 				do {
 					Viewer.printDebug("Fetching images from " + url);
 					try {
-						inputHtml = Viewer.getUrlContent(url);
+						inputHtml = NetworkData.getUrlContent(url);
 					} catch (Exception e) {
 						Viewer.printDebug(" 	Unable to fetch thread - " + url);
-						manager.toastInUI("Unable to fetch thread - " + url,
-								Toast.LENGTH_LONG);
 					}
 				} while (inputHtml == null);
 				// "" Is what gets return if nothing gets returned, null is

@@ -30,26 +30,26 @@ import android.widget.AdapterView.OnItemClickListener;
 
 public class Viewer extends Activity {
 
-	/** Called when the activity is first created. */
-
-	private ArrayList<File> fileList;
-
-	private GridView gridView;
-	private ImageAdapter imgAdapter;
-	private FetcherManager man;
 	public static final boolean isDebug = true;
 	public static final File tempDir = new File(Environment
 			.getExternalStorageDirectory(), "/4Chan/temp/");
 	public static final File baseDir = new File(Environment
 			.getExternalStorageDirectory(), "/4Chan/");
 	
-	public static final int NBR_IMAGES_TO_DOWNLOAD_DIRECTLY = 16;
-	public static final int NBR_IMAGES_TO_DOWNLOAD_INCREMENT = 16;
-	public static final int NBR_IMAGES_TO_DOWNLOAD_AHEAD = 32;
-	public static final int NBR_IMAGES_TO_DISPLAY_MAX = 38;
+	public static final int NBR_IMAGES_TO_DOWNLOAD_DIRECTLY = 75; //16
+	public static final int NBR_IMAGES_TO_DOWNLOAD_INCREMENT = 16; //16
+	public static final int NBR_IMAGES_TO_DOWNLOAD_AHEAD = 30; //32
+	public static final int NBR_IMAGES_TO_DISPLAY_MAX = 75; //38
 	
-	private static final int MENU_CLEAR = 0;
-	private static final int MENU_MORE = 1;
+	private ArrayList<File> fileList;
+	private GridView gridView;
+	private ImageAdapter imgAdapter;
+	private FetcherManager man;
+	private File lastImageClicked = null;
+	private TouchImageView currentImageDisplayed = null;
+	
+	private static final int MENU_RELOAD = 0;
+	//private static final int MENU_MORE = 1;
 	
 	private static TargetUrl imageTarget;
 	private static TargetUrl linkTarget;
@@ -102,7 +102,9 @@ public class Viewer extends Activity {
 
 		gridView = (GridView) findViewById(R.id.gridview);
 		gridView.setAdapter(imgAdapter);
-
+		
+//		gridView.setOnItemLongClickListener(listener)
+		
 		gridView.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
@@ -111,22 +113,25 @@ public class Viewer extends Activity {
 				printDebug("Image " + position + " was clicked!");
 				getImgFromFile(imgAdapter.getItem(position));
 
-				TouchImageView temp = new TouchImageView(Viewer.this);
+				currentImageDisplayed = new TouchImageView(Viewer.this);
 
-				File file = (File) imgAdapter.getItem(position);
-				temp.setImage(getImgFromFile(file), gridView.getWidth(),
+				lastImageClicked = (File) imgAdapter.getItem(position);
+				
+				currentImageDisplayed.setImage(getImgFromFile(lastImageClicked), gridView.getWidth(),
 						gridView.getHeight());
 
-				temp.setOnClickListener(new OnClickListener() {
+				currentImageDisplayed.setOnClickListener(new OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						Viewer.this.setContentView(gridView);
 						v.setVisibility(View.GONE);
+						lastImageClicked = null;
+						currentImageDisplayed = null;
 
 					}
 				});
 
-				setContentView(temp);
+				setContentView(currentImageDisplayed);
 			}
 		});
 
@@ -140,15 +145,18 @@ public class Viewer extends Activity {
 	}
 
 	@Override
-	protected void onResume() {
-		super.onResume();
+	protected void onResume() {	
 		printDebug("onResume()");
+		super.onResume();
+		
 	}
 
 	@Override
 	protected void onPause() {
-		super.onPause();
+	
 		printDebug("onPause()");
+		super.onPause();
+		
 	}
 
 	@Override
@@ -170,28 +178,31 @@ public class Viewer extends Activity {
 
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
+
+		printDebug("onConfigurationChanged()");
 		super.onConfigurationChanged(newConfig);
 	}
 	
 	/* Creates the menu items */
 	public boolean onCreateOptionsMenu(Menu menu) {
-	    menu.add(0, MENU_CLEAR, 0, "Clear");
-	    menu.add(0, MENU_MORE, 0, "More");
+	    menu.add(0, MENU_RELOAD, 0, "Reload");
+	    //menu.add(0, MENU_MORE, 0, "More");
 	    return true;
 	}
 
 	/* Handles item selections */
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    switch (item.getItemId()) {
-	    case MENU_CLEAR:
+	    case MENU_RELOAD:
 	        imgAdapter.clearContents();
 	        man.downloadXAdditionalImages(NBR_IMAGES_TO_DOWNLOAD_DIRECTLY - man.getNumberOfImageToDownload());
 	        return true;
-	    case MENU_MORE:
+	    /*case MENU_MORE:
 	        int imagesForDisplay = man.getNbrImagesToDownload() + imgAdapter.getCount();
 	        int imagesToAdd = NBR_IMAGES_TO_DISPLAY_MAX - imagesForDisplay;
 	        imagesToAdd = imagesToAdd > 16 ? 16 : imagesToAdd;
 	        return true;
+	    */
 	    }
 	    return false;
 	}
@@ -234,53 +245,5 @@ public class Viewer extends Activity {
 		}
 
 		return pic;
-	}
-
-	private static InputStream getHTTPConnection(String sUrl){
-
-		URL url = null;
-		InputStream is = null;
-		try {
-			url = new URL(sUrl);
-			HttpURLConnection connection = (HttpURLConnection) url
-					.openConnection();
-			connection.setRequestMethod("GET");
-			connection.setDoOutput(true);
-			connection.setConnectTimeout(30000);
-			connection.setReadTimeout(60000);
-			connection.connect();
-			is = connection.getInputStream();
-		} catch (Exception e) {
-			printDebug(" 	Couldnt connect to: " + sUrl);
-		}
-		return is;
-	}
-
-	public static String getUrlContent(String sUrl) throws Exception {
-		BufferedReader rd = new BufferedReader(new InputStreamReader(
-				getHTTPConnection(sUrl)));
-		String content = "", line;
-		while ((line = rd.readLine()) != null) {
-			content += line + "\n";
-		}
-		return content;
-	}
-
-	public static File getFileFromUrl(String sUrl, String outputName)
-			throws Exception {
-		InputStream in = getHTTPConnection(sUrl);
-		tempDir.mkdirs();
-		File file = new File(tempDir, outputName);
-
-		System.out.println("Saving image to: " + file.toString());
-		FileOutputStream out = new FileOutputStream(file);
-
-		byte[] buf = new byte[4 * 1024]; // 4K buffer
-		int bytesRead;
-		while ((bytesRead = in.read(buf)) != -1) {
-			out.write(buf, 0, bytesRead);
-		}
-		in.close();
-		return new File(outputName);
 	}
 }

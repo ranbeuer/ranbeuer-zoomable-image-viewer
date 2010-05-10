@@ -2,8 +2,8 @@ package se.robertfoss.ChanImageBrowser.Fetcher;
 
 import java.util.ArrayList;
 
-import android.widget.Toast;
 
+import se.robertfoss.ChanImageBrowser.NetworkData;
 import se.robertfoss.ChanImageBrowser.Viewer;
 import se.robertfoss.ChanImageBrowser.Target.TargetUrl;
 
@@ -31,17 +31,12 @@ public class IndexFetcher extends Thread {
 
 				do {
 					try {
-						inputHtml = Viewer.getUrlContent(url);
+						inputHtml = NetworkData.getUrlContent(url);
 					} catch (Exception e) {
 						Viewer.printDebug(" 	Unable to fetch index - " + url);
-						manager.toastInUI("Unable to fetch index - " + url,
-								Toast.LENGTH_LONG);
 						e.printStackTrace();
 					}
-				} while (inputHtml.equals("") || inputHtml == null);
-				// "" Is what gets return if nothing gets returned, null is
-				// returned if
-				// something breaks :S
+				} while (inputHtml == null);
 
 				// Parse for images and add to managers list
 				Viewer.printDebug("Fetching images from " + url);

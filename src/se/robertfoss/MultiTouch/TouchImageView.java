@@ -17,6 +17,7 @@ public class TouchImageView extends ImageView {
 	// These matrices will be used to move and zoom image
 	Matrix matrix = new Matrix();
 	Matrix savedMatrix = new Matrix();
+	Bitmap image;
 
 	// We can be in one of these 3 states
 	static final int NONE = 0;
@@ -107,7 +108,7 @@ public class TouchImageView extends ImageView {
 	
 	 public void setImage(Bitmap bm, int displayWidth, int displayHeight) { 
 		super.setImageBitmap(bm);
-	 
+		image = bm;
 		//Fit to screen.
 		float scale;
 		if ((displayHeight / bm.getHeight()) >= (displayWidth / bm.getWidth())){
@@ -116,8 +117,6 @@ public class TouchImageView extends ImageView {
 			scale = (float)displayHeight / (float)bm.getHeight();
 		}
 		
-		savedMatrix.set(matrix);
-		matrix.set(savedMatrix);
 		matrix.postScale(scale, scale, mid.x, mid.y);
 		setImageMatrix(matrix);
 		
@@ -134,6 +133,39 @@ public class TouchImageView extends ImageView {
 		matrix.set(savedMatrix);
 		matrix.postTranslate(redundantXSpace, redundantYSpace);
 		setImageMatrix(matrix);
+	 }
+	 
+	 @Override
+	 public void onSizeChanged(int displayWidth, int displayHeight,int s, int d){
+		 int width = super.getWidth();
+		 int height = super.getHeight();
+		 	Viewer.printDebug("Centered and resized image");
+			float scale;
+			if ((height / image.getHeight()) >= (width / image.getWidth())){
+				scale =  (float)width / (float)image.getWidth();
+			} else {
+				scale = (float)height / (float)image.getHeight();
+			}
+			
+			matrix.reset();
+			
+			matrix.postScale(scale, scale, mid.x, mid.y);
+			
+			
+			// Center the image
+			float redundantYSpace = (float)displayHeight - (scale * (float)image.getHeight()) ;
+			float redundantXSpace = (float)displayWidth - (scale * (float)image.getWidth());
+			
+			redundantYSpace /= (float)2;
+			redundantXSpace /= (float)2;
+
+			
+			savedMatrix.set(matrix);
+			matrix.set(savedMatrix);
+			matrix.postTranslate(redundantXSpace, redundantYSpace);
+			
+			
+			setImageMatrix(matrix);
 	 }
 	
 

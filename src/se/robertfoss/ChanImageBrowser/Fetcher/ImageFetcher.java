@@ -2,8 +2,7 @@ package se.robertfoss.ChanImageBrowser.Fetcher;
 
 import java.io.File;
 
-import android.widget.Toast;
-
+import se.robertfoss.ChanImageBrowser.NetworkData;
 import se.robertfoss.ChanImageBrowser.Viewer;
 
 public class ImageFetcher extends Thread {
@@ -35,12 +34,10 @@ public class ImageFetcher extends Thread {
 
 				File pic = null;
 				try {
-					pic = Viewer.getFileFromUrl(inputUrl,
+					pic = NetworkData.getFileFromUrl(inputUrl,
 							fileName[fileName.length - 1]);
 				} catch (Exception e) {
 					Viewer.printDebug(" 	Unable to fetch image - " + inputUrl);
-					manager.toastInUI("Unable to fetch index - " + inputUrl,
-							Toast.LENGTH_LONG);
 					e.printStackTrace();
 				}
 
@@ -53,7 +50,10 @@ public class ImageFetcher extends Thread {
 							+ " could'nt be parsed into a Bitmap");
 				}
 				inputUrl = manager.getNextImageName();
-				yield();
+				try {
+					yield();
+					Thread.sleep(125);
+				} catch (InterruptedException e) {}
 			}
 			
 			// Wait for new data
