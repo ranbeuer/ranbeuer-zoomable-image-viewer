@@ -83,7 +83,7 @@ public class TouchImageView extends ImageView {
 					break;
 				case MotionEvent.ACTION_MOVE:
 					if (mode == DRAG) {
-						// ...
+
 						matrix.set(savedMatrix);
 						matrix.postTranslate(event.getX() - start.x, event.getY() - start.y);
 					} else if (mode == ZOOM) {
@@ -109,34 +109,16 @@ public class TouchImageView extends ImageView {
 	 public void setImage(Bitmap bm, int displayWidth, int displayHeight) { 
 		super.setImageBitmap(bm);
 		image = bm;
-		//Fit to screen.
-		float scale;
-		if ((displayHeight / bm.getHeight()) >= (displayWidth / bm.getWidth())){
-			scale =  (float)displayWidth / (float)bm.getWidth();
-		} else {
-			scale = (float)displayHeight / (float)bm.getHeight();
-		}
 		
-		matrix.postScale(scale, scale, mid.x, mid.y);
-		setImageMatrix(matrix);
-		
-
-		// Center the image
-		float redundantYSpace = (float)displayHeight - (scale * (float)bm.getHeight()) ;
-		float redundantXSpace = (float)displayWidth - (scale * (float)bm.getWidth());
-		
-		redundantYSpace /= (float)2;
-		redundantXSpace /= (float)2;
-
-		
-		savedMatrix.set(matrix);
-		matrix.set(savedMatrix);
-		matrix.postTranslate(redundantXSpace, redundantYSpace);
-		setImageMatrix(matrix);
+		centerImage();
 	 }
 	 
 	 @Override
 	 public void onSizeChanged(int displayWidth, int displayHeight,int s, int d){
+		 centerImage();
+	 }
+	 
+	 private void centerImage(){
 		 int width = super.getWidth();
 		 int height = super.getHeight();
 		 	Viewer.printDebug("Centered and resized image");
@@ -148,20 +130,22 @@ public class TouchImageView extends ImageView {
 			}
 			
 			matrix.reset();
+			savedMatrix.reset();
+			setImageMatrix(matrix);
 			
 			matrix.postScale(scale, scale, mid.x, mid.y);
 			
 			
 			// Center the image
-			float redundantYSpace = (float)displayHeight - (scale * (float)image.getHeight()) ;
-			float redundantXSpace = (float)displayWidth - (scale * (float)image.getWidth());
+			float redundantYSpace = (float)height - (scale * (float)image.getHeight()) ;
+			float redundantXSpace = (float)width - (scale * (float)image.getWidth());
 			
 			redundantYSpace /= (float)2;
 			redundantXSpace /= (float)2;
 
 			
 			savedMatrix.set(matrix);
-			matrix.set(savedMatrix);
+			//matrix.set(savedMatrix);
 			matrix.postTranslate(redundantXSpace, redundantYSpace);
 			
 			

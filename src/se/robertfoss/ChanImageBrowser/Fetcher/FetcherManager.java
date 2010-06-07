@@ -28,7 +28,7 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 	private ArrayList<ThreadFetcher> threadfetchers;
 
 	private final int MAX_IMAGEFETCHERS = 2;
-	private final int MAX_THREADFETCHERS = 1;
+	private final int MAX_THREADFETCHERS = 3;
 	private Viewer parent;
 	private int imagesToDownload;
 
