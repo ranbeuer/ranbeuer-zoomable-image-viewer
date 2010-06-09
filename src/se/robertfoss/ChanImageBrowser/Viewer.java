@@ -35,7 +35,7 @@ public class Viewer extends Activity {
 	public static final File baseDir = new File(Environment
 			.getExternalStorageDirectory(), "/4Chan/");
 	
-	public static final int NBR_IMAGES_TO_DOWNLOAD_DIRECTLY = 75; //16
+	public static final int NBR_IMAGES_TO_DOWNLOAD_DIRECTLY = 45; //16
 	public static final int NBR_IMAGES_TO_DOWNLOAD_INCREMENT = 16; //16
 	public static final int NBR_IMAGES_TO_DOWNLOAD_AHEAD = 30; //32
 	public static final int NBR_IMAGES_TO_DISPLAY_MAX = 75; //38
@@ -89,6 +89,7 @@ public class Viewer extends Activity {
 
 		gridView = (GridView) findViewById(R.id.gridview);
 		gridView.setAdapter(imgAdapter);
+		gridView.setColumnWidth(140); //Fix for lowres devices.
 		
 		gridView.setOnItemLongClickListener(new OnItemLongClickListener() {
 
