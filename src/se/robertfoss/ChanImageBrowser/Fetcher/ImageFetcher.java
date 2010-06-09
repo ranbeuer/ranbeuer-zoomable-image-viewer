@@ -9,16 +9,26 @@ public class ImageFetcher extends Thread {
 
 	private FetcherManager manager;
 	private boolean isDone;
-	private final static int THREAD_SLEEP_TIME = 5000;
+	private boolean isPaused;
+	private final static int THREAD_SLEEP_TIME = 3000;
 
 
 	ImageFetcher(FetcherManager manager) {
 		this.manager = manager;
 		isDone = false;
+		isPaused = false;
 	}
 
 	public void done() {
 		isDone = true;
+	}
+	
+	public void pause(Boolean isPaused){
+		this.isPaused = isPaused;
+	}
+	
+	public boolean isPaused(){
+		return isPaused;
 	}
 
 	public void run() {
@@ -27,9 +37,11 @@ public class ImageFetcher extends Thread {
 		while (!isDone) {
 			
 			while (manager.getNbrImagesToDownload() > 0 && 
-					(inputUrl = manager.getNextImageName()) != null) {
+					(inputUrl = manager.getNextImageName()) != null 
+					&& !isPaused
+					&& !isDone) {
 				System.out.println("Images left to download: " + manager.getNbrImagesToDownload());
-				Viewer.printDebug("Fetching picture  -  " + inputUrl);
+				Viewer.printDebug(super.getName() + " is fetching picture  -  " + inputUrl);
 				String[] fileName = inputUrl.split("/");
 
 				File pic = null;
@@ -42,27 +54,29 @@ public class ImageFetcher extends Thread {
 				}
 
 				Viewer
-						.printDebug("ImageFetcher is adding downloaded a picture");
+						.printDebug(super.getName() + " is adding downloaded a picture");
 				if (pic != null) {
 					manager.addCompleteImage(pic);
 				} else {
-					Viewer.printDebug("	" + inputUrl
+					Viewer.printDebug(" 	" + inputUrl
 							+ " could'nt be parsed into a Bitmap");
 				}
 				inputUrl = manager.getNextImageName();
+				
+				//Let UI work for a bit.
 				try {
-					yield();
-					Thread.sleep(125);
-				} catch (InterruptedException e) {}
+					Thread.sleep(1500);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 			
-			// Wait for new data
+			// Wait for new data or to be unpaused
 			try {
 				Thread.sleep(THREAD_SLEEP_TIME);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			yield();
 		}
 	}
 }

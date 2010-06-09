@@ -2,65 +2,88 @@ package se.robertfoss.ChanImageBrowser.Fetcher;
 
 import java.util.ArrayList;
 
-
 import se.robertfoss.ChanImageBrowser.NetworkData;
 import se.robertfoss.ChanImageBrowser.Viewer;
-import se.robertfoss.ChanImageBrowser.Target.TargetUrl;
 
 public class IndexFetcher extends Thread {
-	private FetcherManager manager;
-	private TargetUrl imageTarget;
-	private TargetUrl linkTarget;
-	private boolean isDone;
-	private final static int LINK_DOWNLOAD_THRESHOLD = 2;
 
-	IndexFetcher(FetcherManager manager, TargetUrl linkTarget,
-			TargetUrl imageTarget) {
+	private FetcherManager manager;
+	private boolean isDone;
+	private boolean isPaused;
+	private final static int THREAD_SLEEP_TIME = 3000;
+	private final static int LINK_DOWNLOAD_THRESHOLD = 2;
+	private final static int NUMBER_OF_RETRIES = 3;
+
+	private String seedUrl;
+	private String pageRegex;
+	private String imageRegex;
+	private String prependToPageUrl;
+	private String prependToImageUrl;
+
+	IndexFetcher(FetcherManager manager, String seedUrl, String pageRegex,
+			String prependToPageUrl, String imageRegex, String prependToImageUrl) {
 		this.manager = manager;
-		this.imageTarget = imageTarget;
-		this.linkTarget = linkTarget;
+		this.seedUrl = seedUrl;
+		this.imageRegex = imageRegex;
+		this.pageRegex = pageRegex;
+		this.prependToImageUrl = prependToImageUrl;
+		this.prependToPageUrl = prependToPageUrl;
 		isDone = false;
+		isPaused = false;
 	}
 
 	public void run() {
 
 		while (!isDone) {
-			while (manager.getNbrUrlLinks() < LINK_DOWNLOAD_THRESHOLD) {
-				String url = linkTarget.getIndex();
-				String inputHtml = null;
-
-				do {
-					try {
-						inputHtml = NetworkData.getUrlContent(url);
-					} catch (Exception e) {
-						Viewer.printDebug(" 	Unable to fetch index - " + url);
-						e.printStackTrace();
-					}
-				} while (inputHtml == null);
-
-				// Parse for images and add to managers list
-				Viewer.printDebug("Fetching images from " + url);
-				ArrayList<String> tempList = Parser.parseForStrings(inputHtml,
-						imageTarget);
-				for (String str : tempList) {
-					manager.addImageUrl(str);
-				}
-				
-				yield();
-				
-				// Parse for links and add to managers list
-				Viewer.printDebug("Fetching links from " + url);
-				tempList = Parser.parseForStrings(inputHtml, linkTarget);
-				for (String str : tempList) {
-					manager.addLinkUrl(str);
-				}
-				
-				yield();
+			while (manager.getNbrUrlLinks() < LINK_DOWNLOAD_THRESHOLD
+					&& !isPaused && !isDone) {
+				runOneIteration();
 			}
+
+			// Wait for new data or to be unpaused
+			try {
+				Thread.sleep(THREAD_SLEEP_TIME);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void runOneIteration() {
+		String inputHtml = null;
+		int retries = NUMBER_OF_RETRIES;
+		do {
+			retries--;
+			inputHtml = NetworkData.getUrlContent(seedUrl);
+		} while (inputHtml == null && retries > 0);
+
+		// Parse for images and add to managers list
+		Viewer.printDebug("Fetching images from " + seedUrl);
+		ArrayList<String> tempList = Parser.parseForStrings(inputHtml,
+				imageRegex);
+		for (String str : tempList) {
+			manager.addImageUrl(prependToImageUrl + str);
+		}
+
+		yield();
+
+		// Parse for links and add to managers list
+		Viewer.printDebug("Fetching links from " + seedUrl);
+		tempList = Parser.parseForStrings(inputHtml, pageRegex);
+		for (String str : tempList) {
+			manager.addLinkUrl(prependToPageUrl + str);
 		}
 	}
 
 	public void done() {
 		isDone = true;
+	}
+	
+	public void pause(Boolean isPaused) {
+		this.isPaused = isPaused;
+	}
+
+	public boolean isPaused() {
+		return isPaused;
 	}
 }

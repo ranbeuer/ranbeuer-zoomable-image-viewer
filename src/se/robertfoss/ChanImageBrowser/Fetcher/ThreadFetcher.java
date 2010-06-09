@@ -2,25 +2,38 @@ package se.robertfoss.ChanImageBrowser.Fetcher;
 
 import java.util.ArrayList;
 
-
 import se.robertfoss.ChanImageBrowser.NetworkData;
 import se.robertfoss.ChanImageBrowser.Viewer;
-import se.robertfoss.ChanImageBrowser.Target.TargetUrl;
 
 public class ThreadFetcher extends Thread {
 	private FetcherManager manager;
 	private boolean isDone;
-	private TargetUrl imageTarget;
+	private boolean isPaused;
+	private String imageRegex;
+	private String prependToImageUrl;
+	private final static int THREAD_SLEEP_TIME = 5000;
 	private final static int IMAGE_DOWNLOAD_THRESHOLD = 12;
+	private final static int NUMBER_OF_RETRIES = 3;
 
-	ThreadFetcher(FetcherManager manager, TargetUrl imageTarget) {
+	ThreadFetcher(FetcherManager manager, String imageRegex,
+			String prependToImageUrl) {
 		this.manager = manager;
-		this.imageTarget = imageTarget;
+		this.imageRegex = imageRegex;
+		this.prependToImageUrl = prependToImageUrl;
 		isDone = false;
+		isPaused = false;
 	}
 
 	public void done() {
 		isDone = true;
+	}
+	
+	public void pause(Boolean isPaused){
+		this.isPaused = isPaused;
+	}
+	
+	public boolean isPaused(){
+		return isPaused;
 	}
 
 	public void run() {
@@ -29,31 +42,39 @@ public class ThreadFetcher extends Thread {
 		while (!isDone) {
 			String url;
 			while (manager.getNbrImageLinks() < IMAGE_DOWNLOAD_THRESHOLD
-					&& (url = manager.getNextUrl()) != null) {
-				
+					&& (url = manager.getNextUrl()) != null
+					&& !isPaused
+					&& !isDone) {
+
 				String inputHtml = null;
+				int retries = NUMBER_OF_RETRIES;
 				do {
-					Viewer.printDebug("Fetching images from " + url);
+					retries--;
+					Viewer.printDebug(super.getName() +" is fetching images from " + url);
 					try {
 						inputHtml = NetworkData.getUrlContent(url);
 					} catch (Exception e) {
 						Viewer.printDebug(" 	Unable to fetch thread - " + url);
 					}
-				} while (inputHtml == null);
-				// "" Is what gets return if nothing gets returned, null is
-				// returned
-				// if something breaks :S
+				} while (inputHtml == null && retries > 0);
 
 				// Parse for images and add to managers list
-				ArrayList<String> tempList = Parser.parseForStrings(inputHtml,
-						imageTarget);
-				for (String str : tempList) {
-					manager.addImageUrl(str);
+				if (inputHtml != null) {
+					ArrayList<String> tempList = Parser.parseForStrings(
+							inputHtml, imageRegex);
+					for (String str : tempList) {
+						manager.addImageUrl(prependToImageUrl + str);
+					}
 				}
 
 				url = manager.getNextUrl();
-
-				yield();
+			}
+			
+			// Wait for new data or ot be unpaused
+			try {
+				Thread.sleep(THREAD_SLEEP_TIME);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 	}

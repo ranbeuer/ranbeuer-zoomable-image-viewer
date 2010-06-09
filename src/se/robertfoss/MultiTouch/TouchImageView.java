@@ -1,5 +1,7 @@
 package se.robertfoss.MultiTouch;
 
+import java.io.File;
+
 import se.robertfoss.ChanImageBrowser.Viewer;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -15,9 +17,10 @@ public class TouchImageView extends ImageView {
 
 	private static final String TAG = "Touch";
 	// These matrices will be used to move and zoom image
-	Matrix matrix = new Matrix();
-	Matrix savedMatrix = new Matrix();
-	Bitmap image;
+	private Matrix matrix = new Matrix();
+	private Matrix savedMatrix = new Matrix();
+	private Bitmap image;
+	private File imageFile;
 
 	// We can be in one of these 3 states
 	static final int NONE = 0;
@@ -26,11 +29,11 @@ public class TouchImageView extends ImageView {
 	int mode = NONE;
 
 	// Remember some things for zooming
-	PointF start = new PointF();
-	PointF mid = new PointF();
-	float oldDist = 1f;
+	private PointF start = new PointF();
+	private PointF mid = new PointF();
+	private float oldDist = 1f;
 	
-	Context context;
+	private Context context;
 	
 	
 	public TouchImageView(Context context) {
@@ -106,11 +109,16 @@ public class TouchImageView extends ImageView {
 	}
 	
 	
-	 public void setImage(Bitmap bm, int displayWidth, int displayHeight) { 
-		super.setImageBitmap(bm);
-		image = bm;
+	 public void setImage(File file, int displayWidth, int displayHeight) { 
+		image = Viewer.getImgFromFile(file);
+		this.imageFile = file;
+		super.setImageBitmap(image);
 		
 		centerImage();
+	 }
+	 
+	 public File getFile(){
+		 return imageFile;
 	 }
 	 
 	 @Override
@@ -135,19 +143,15 @@ public class TouchImageView extends ImageView {
 			
 			matrix.postScale(scale, scale, mid.x, mid.y);
 			
-			
-			// Center the image
 			float redundantYSpace = (float)height - (scale * (float)image.getHeight()) ;
 			float redundantXSpace = (float)width - (scale * (float)image.getWidth());
 			
 			redundantYSpace /= (float)2;
 			redundantXSpace /= (float)2;
 
-			
 			savedMatrix.set(matrix);
 			//matrix.set(savedMatrix);
 			matrix.postTranslate(redundantXSpace, redundantYSpace);
-			
 			
 			setImageMatrix(matrix);
 	 }
