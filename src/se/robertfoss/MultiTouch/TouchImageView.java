@@ -5,6 +5,7 @@ import java.io.File;
 import se.robertfoss.ChanImageBrowser.Viewer;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.util.FloatMath;
@@ -16,6 +17,7 @@ import android.widget.ImageView;
 public class TouchImageView extends ImageView {
 
 	private static final String TAG = "Touch";
+	private static final int MAX_PIXELS = 1000*8*32; // Megabytes to pixels
 	// These matrices will be used to move and zoom image
 	private Matrix matrix = new Matrix();
 	private Matrix savedMatrix = new Matrix();
@@ -110,7 +112,7 @@ public class TouchImageView extends ImageView {
 	
 	
 	 public void setImage(File file, int displayWidth, int displayHeight) { 
-		image = Viewer.getImgFromFile(file);
+		image = TouchImageView.getImgFromFile(file);
 		this.imageFile = file;
 		super.setImageBitmap(image);
 		
@@ -150,7 +152,6 @@ public class TouchImageView extends ImageView {
 			redundantXSpace /= (float)2;
 
 			savedMatrix.set(matrix);
-			//matrix.set(savedMatrix);
 			matrix.postTranslate(redundantXSpace, redundantYSpace);
 			
 			setImageMatrix(matrix);
@@ -199,5 +200,17 @@ public class TouchImageView extends ImageView {
 		float x = event.getX(0) + event.getX(1);
 		float y = event.getY(0) + event.getY(1);
 		point.set(x / 2, y / 2);
+	}
+
+
+	public static Bitmap getImgFromFile(File file) {
+	
+		Bitmap pic = BitmapFactory.decodeFile(file.toString());
+		if (pic == null) {
+			Viewer.printDebug("	    Tried to read image: " + file.toString());
+			Viewer.printDebug("     Image from file is null");
+		}
+	
+		return pic;
 	}
 }

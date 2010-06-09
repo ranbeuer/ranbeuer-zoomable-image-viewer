@@ -103,19 +103,10 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 		}
 		indexfetcher.start();
 
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		
-
-
 		// Wait until images can be downloaded
 		while (imageUrlList.size() == 0) {
 			try {
-				Thread.sleep(500);
+				Thread.sleep(750);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

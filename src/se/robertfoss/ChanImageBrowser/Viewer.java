@@ -11,7 +11,6 @@ import se.robertfoss.MultiTouch.TouchImageView;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.net.Uri;
@@ -115,7 +114,7 @@ public class Viewer extends Activity {
 			public void onItemClick(AdapterView<?> arg0, View arg1,
 					int position, long id) {
 				printDebug("Image " + position + " was clicked!");
-				getImgFromFile(imgAdapter.getItem(position));
+				TouchImageView.getImgFromFile(imgAdapter.getItem(position));
 
 				currentImageDisplayed = new TouchImageView(Viewer.this);
 
@@ -236,6 +235,7 @@ public class Viewer extends Activity {
 	    switch (item.getItemId()) {
 	    case MENU_RELOAD:
 	        imgAdapter.clearContents();
+	        man.setFetchersPause(false);
 	        man.downloadXAdditionalImages(NBR_IMAGES_TO_DOWNLOAD_DIRECTLY - man.getNumberOfImageToDownload());
 	        return true;
 	    /*case MENU_MORE:
@@ -275,16 +275,5 @@ public class Viewer extends Activity {
 		if (isDebug) {
 			System.out.println(str);
 		}
-	}
-
-	public static Bitmap getImgFromFile(File file) {
-
-		Bitmap pic = BitmapFactory.decodeFile(file.toString());
-		if (pic == null) {
-			printDebug("	Tried to read image: " + file.toString());
-			printDebug("	Image from file is null");
-		}
-
-		return pic;
 	}
 }
