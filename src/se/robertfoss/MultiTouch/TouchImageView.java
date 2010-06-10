@@ -37,7 +37,6 @@ public class TouchImageView extends ImageView {
 	
 	private Context context;
 	
-	
 	public TouchImageView(Context context) {
 		super(context);
 		super.setClickable(true);
@@ -157,9 +156,9 @@ public class TouchImageView extends ImageView {
 			setImageMatrix(matrix);
 	 }
 	
-
+	 
 	/** Show an event in the LogCat view, for debugging */
-	private void dumpEvent(WrapMotionEvent event) {
+	 private void dumpEvent(WrapMotionEvent event) {
 		// ...
 		String names[] = { "DOWN", "UP", "MOVE", "CANCEL", "OUTSIDE",
 				"POINTER_DOWN", "POINTER_UP", "7?", "8?", "9?" };

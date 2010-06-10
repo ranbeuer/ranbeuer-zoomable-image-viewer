@@ -7,7 +7,7 @@ public class EclairMotionEvent extends WrapMotionEvent {
    protected EclairMotionEvent(MotionEvent event) {
       super(event);
    }
-
+   
    public float getX(int pointerIndex) {
       return event.getX(pointerIndex);
    }

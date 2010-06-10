@@ -71,7 +71,9 @@ public class Viewer extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		printDebug("onCreate()");
-		Debug.startMethodTracing("myapp");
+		
+		// Doesnt work on 1.6
+//		Debug.startMethodTracing("myapp");
 		
 		ExceptionHandler.register(this);
 		
@@ -149,6 +151,8 @@ public class Viewer extends Activity {
 		Viewer.this.setContentView(view);
 	}
 
+	
+	// I dont work on >= 1.6   --- Find a solution..
 	@Override
 	public void onBackPressed(){
 		if (currentImageDisplayed != null){
@@ -213,7 +217,8 @@ public class Viewer extends Activity {
 		man = null;
 		super.finish();
 		
-		Debug.stopMethodTracing();
+		// Doesnt work on 1.6
+//		Debug.stopMethodTracing();
 
 	}
 
