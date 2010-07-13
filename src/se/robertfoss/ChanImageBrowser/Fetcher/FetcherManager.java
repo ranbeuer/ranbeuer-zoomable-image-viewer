@@ -16,7 +16,7 @@ import android.os.Process;
 public class FetcherManager extends AsyncTask<String, Void, Void> {
 
 	private ProgressDialog dialog;
-	private HashMap<String,Boolean> visitedUrls;
+	private HashMap<String, Boolean> visitedUrls;
 	private LinkedList<String> imageUrlList;
 	private LinkedList<String> linkUrlList;
 
@@ -42,12 +42,13 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 	 * @param imageTarget
 	 *            - Urlpackage for the images
 	 */
-	public FetcherManager(Viewer view, int imagesToDownload, String seedUrl, 
-			String pageRegex, String prependToPageUrl, String imageRegex, 
-			String prependToImageUrl) {
+	public FetcherManager(Viewer view, int imagesToDownload, String seedUrl,
+			String pageRegex, int pageRegexTruncateIndex,
+			String prependToPageUrl, String imageRegex,
+			int imageRegexTruncateIndex, String prependToImageUrl) {
 		Viewer.printDebug("Creating Fetchers \n");
 		parent = view;
-		visitedUrls = new HashMap<String,Boolean>();
+		visitedUrls = new HashMap<String, Boolean>();
 		imageUrlList = new LinkedList<String>();
 		linkUrlList = new LinkedList<String>();
 		imagefetchers = new ArrayList<ImageFetcher>();
@@ -55,10 +56,9 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 		dialog = new ProgressDialog(view);
 
 		this.imagesToDownload = imagesToDownload;
-		
-		indexfetcher = new IndexFetcher(this, seedUrl, 
-				 pageRegex,  prependToPageUrl,  imageRegex, 
-				 prependToImageUrl);
+
+		indexfetcher = new IndexFetcher(this, seedUrl, pageRegex, pageRegexTruncateIndex,
+				prependToPageUrl, imageRegex, imageRegexTruncateIndex, prependToImageUrl);
 		indexfetcher.setName("IndexFetcher");
 		indexfetcher.setPriority(Process.THREAD_PRIORITY_BACKGROUND);
 
@@ -66,16 +66,18 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 			Viewer.printDebug("ImageFetcher-" + i + " created");
 			ImageFetcher temp = new ImageFetcher(this);
 			temp.setName("ImageFetcher-" + i);
-			temp.setPriority(Process.THREAD_PRIORITY_BACKGROUND - 2 * Process.THREAD_PRIORITY_LESS_FAVORABLE);
+			temp.setPriority(Process.THREAD_PRIORITY_BACKGROUND - 2
+					* Process.THREAD_PRIORITY_LESS_FAVORABLE);
 			imagefetchers.add(temp);
 		}
 
 		for (int i = 0; i < MAX_THREADFETCHERS; i++) {
 			Viewer.printDebug("ThreadFetcher-" + i + " created");
-			ThreadFetcher temp = new ThreadFetcher(this, imageRegex, 
-					 prependToImageUrl);
+			ThreadFetcher temp = new ThreadFetcher(this, imageRegex, imageRegexTruncateIndex,
+					prependToImageUrl);
 			temp.setName("ThreadFetcher-" + i);
-			temp.setPriority(Process.THREAD_PRIORITY_BACKGROUND - Process.THREAD_PRIORITY_LESS_FAVORABLE);
+			temp.setPriority(Process.THREAD_PRIORITY_BACKGROUND
+					- Process.THREAD_PRIORITY_LESS_FAVORABLE);
 			threadfetchers.add(temp);
 		}
 	}
@@ -91,12 +93,12 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 
 		indexfetcher.runOneIteration();
 		setDialogMessage("Index fetched. Fetching images");
-		
+
 		for (int i = 0; i < imagefetchers.size(); i++) {
 			Viewer.printDebug("ImageFetcher-" + i + " started");
 			imagefetchers.get(i).start();
 		}
-		
+
 		for (int i = 0; i < threadfetchers.size(); i++) {
 			Viewer.printDebug("ThreadFetcher-" + i + " started");
 			threadfetchers.get(i).start();
@@ -104,13 +106,13 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 		indexfetcher.start();
 
 		// Wait until images can be downloaded
-		while (imageUrlList.size() == 0) {
+		do {
 			try {
 				Thread.sleep(750);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		}
+		} while (imageUrlList.size() == 0);
 		return null;
 	}
 
@@ -130,13 +132,13 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 			threadfetchers.remove(i);
 			Viewer.printDebug("ThreadFetcher-" + i + " destroyed");
 		}
-		if (indexfetcher != null){
+		if (indexfetcher != null) {
 			indexfetcher.done();
 			indexfetcher = null;
 		}
 	}
-	
-	public void setFetchersPause(boolean pause){
+
+	public void setFetchersPause(boolean pause) {
 		for (int i = 0; i < imagefetchers.size(); i++) {
 			imagefetchers.get(i).pause(pause);
 			Viewer.printDebug("ImageFetcher-" + i + " pause = " + pause);
@@ -145,7 +147,7 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 			threadfetchers.get(i).pause(pause);
 			Viewer.printDebug("ThreadFetcher-" + i + " pause = " + pause);
 		}
-		if (indexfetcher != null){
+		if (indexfetcher != null) {
 			indexfetcher.pause(pause);
 			Viewer.printDebug("IndexFetcher" + " pause = " + pause);
 		}
@@ -159,7 +161,7 @@ public class FetcherManager extends AsyncTask<String, Void, Void> {
 		Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
 		BitmapFactory.decodeFile(file.toString(), options);
-		
+
 		if (options.outHeight != -1) {
 			imagesToDownload -= 1;
 			parent.runOnUiThread(new Runnable() {

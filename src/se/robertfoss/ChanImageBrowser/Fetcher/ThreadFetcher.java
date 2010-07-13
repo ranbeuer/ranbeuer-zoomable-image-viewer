@@ -10,15 +10,17 @@ public class ThreadFetcher extends Thread {
 	private boolean isDone;
 	private boolean isPaused;
 	private String imageRegex;
+	private int imageRegexTruncateIndex;
 	private String prependToImageUrl;
 	private final static int THREAD_SLEEP_TIME = 5000;
 	private final static int IMAGE_DOWNLOAD_THRESHOLD = 12;
 	private final static int NUMBER_OF_RETRIES = 3;
 
-	ThreadFetcher(FetcherManager manager, String imageRegex,
+	ThreadFetcher(FetcherManager manager, String imageRegex, int imageRegexTruncateIndex,
 			String prependToImageUrl) {
 		this.manager = manager;
 		this.imageRegex = imageRegex;
+		this.imageRegexTruncateIndex = imageRegexTruncateIndex;
 		this.prependToImageUrl = prependToImageUrl;
 		isDone = false;
 		isPaused = false;
@@ -61,7 +63,7 @@ public class ThreadFetcher extends Thread {
 				// Parse for images and add to managers list
 				if (inputHtml != null) {
 					ArrayList<String> tempList = Parser.parseForStrings(
-							inputHtml, imageRegex);
+							inputHtml, imageRegex, imageRegexTruncateIndex);
 					for (String str : tempList) {
 						manager.addImageUrl(prependToImageUrl + str);
 					}

@@ -143,6 +143,7 @@ public class TouchImageView extends ImageView {
 			setImageMatrix(matrix);
 			
 			matrix.postScale(scale, scale, mid.x, mid.y);
+			setImageMatrix(matrix);
 			
 			float redundantYSpace = (float)height - (scale * (float)image.getHeight()) ;
 			float redundantXSpace = (float)width - (scale * (float)image.getWidth());

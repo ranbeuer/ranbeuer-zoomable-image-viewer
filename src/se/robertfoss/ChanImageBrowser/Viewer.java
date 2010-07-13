@@ -41,9 +41,11 @@ public class Viewer extends Activity {
 	public static final int NBR_IMAGES_TO_DISPLAY_MAX = 75; //38
 	
 	private static final String SEED_URL = "http://img.4chan.org/b/imgboard.html";
-	private static final String PAGE_REGEX = "<a href=\"res/(\\d*)";
+	private static final String PAGE_REGEX = "\\<a href=\\\"res/([0-9]){1,20}";
+	private static final int PAGE_REGEX_TRUNCATE_TO_INDEX = 14;
 	private static final String PREPEND_TO_RELATIVE_PAGE_URL = "http://boards.4chan.org/b/res/";
-	private static final String IMAGE_REGEX = "http://images.4chan.org/b/src/(\\d*\\.jpg|png)";
+	private static final String IMAGE_REGEX = "http://images.4chan.org/b/src/([0-9])*.(jpg|png)";
+	private static final int IMAGE_REGEX_TRUNCATE_TO_INDEX = 30;
 	private static final String PREPEND_TO_RELATIVE_IMAGE_URL = "http://images.4chan.org/b/src/";
 	
 	
@@ -84,14 +86,13 @@ public class Viewer extends Activity {
 		printDebug("Initializing manager thread");
 		man = new FetcherManager(this,
 				NBR_IMAGES_TO_DOWNLOAD_DIRECTLY,
-				SEED_URL, PAGE_REGEX, 
+				SEED_URL, PAGE_REGEX, PAGE_REGEX_TRUNCATE_TO_INDEX,
 				PREPEND_TO_RELATIVE_PAGE_URL, 
-				IMAGE_REGEX,
+				IMAGE_REGEX, IMAGE_REGEX_TRUNCATE_TO_INDEX,
 				PREPEND_TO_RELATIVE_IMAGE_URL);
 
 		gridView = (GridView) findViewById(R.id.gridview);
 		gridView.setAdapter(imgAdapter);
-		gridView.setColumnWidth(140); //Fix for lowres devices.
 		
 		gridView.setOnItemLongClickListener(new OnItemLongClickListener() {
 
@@ -153,15 +154,15 @@ public class Viewer extends Activity {
 
 	
 	// I dont work on >= 1.6   --- Find a solution..
-	@Override
-	public void onBackPressed(){
-		if (currentImageDisplayed != null){
-			Viewer.this.setContentView(gridView);
-			currentImageDisplayed.performClick();
-		} else {
-			super.onBackPressed();
-		}
-	}
+//	@Override
+//	public void onBackPressed(){
+//		if (currentImageDisplayed != null){
+//			Viewer.this.setContentView(gridView);
+//			currentImageDisplayed.performClick();
+//		} else {
+//			super.onBackPressed();
+//		}
+//	}
 	
 	@Override
 	protected void onResume() {	

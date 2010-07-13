@@ -16,16 +16,20 @@ public class IndexFetcher extends Thread {
 
 	private String seedUrl;
 	private String pageRegex;
+	private int pageRegexTruncateIndex;
 	private String imageRegex;
+	private int imageRegexTruncateIndex;
 	private String prependToPageUrl;
 	private String prependToImageUrl;
 
-	IndexFetcher(FetcherManager manager, String seedUrl, String pageRegex,
-			String prependToPageUrl, String imageRegex, String prependToImageUrl) {
+	IndexFetcher(FetcherManager manager, String seedUrl, String pageRegex, int pageRegexTruncateIndex,
+			String prependToPageUrl, String imageRegex, int imageRegexTruncateIndex, String prependToImageUrl) {
 		this.manager = manager;
 		this.seedUrl = seedUrl;
 		this.imageRegex = imageRegex;
+		this.imageRegexTruncateIndex = imageRegexTruncateIndex;
 		this.pageRegex = pageRegex;
+		this.pageRegexTruncateIndex = pageRegexTruncateIndex;
 		this.prependToImageUrl = prependToImageUrl;
 		this.prependToPageUrl = prependToPageUrl;
 		isDone = false;
@@ -60,7 +64,7 @@ public class IndexFetcher extends Thread {
 		// Parse for images and add to managers list
 		Viewer.printDebug("Fetching images from " + seedUrl);
 		ArrayList<String> tempList = Parser.parseForStrings(inputHtml,
-				imageRegex);
+				imageRegex, imageRegexTruncateIndex);
 		for (String str : tempList) {
 			manager.addImageUrl(prependToImageUrl + str);
 		}
@@ -69,7 +73,7 @@ public class IndexFetcher extends Thread {
 
 		// Parse for links and add to managers list
 		Viewer.printDebug("Fetching links from " + seedUrl);
-		tempList = Parser.parseForStrings(inputHtml, pageRegex);
+		tempList = Parser.parseForStrings(inputHtml, pageRegex, pageRegexTruncateIndex);
 		for (String str : tempList) {
 			manager.addLinkUrl(prependToPageUrl + str);
 		}
