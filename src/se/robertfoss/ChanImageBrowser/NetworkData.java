@@ -77,13 +77,16 @@ public abstract class NetworkData {
 			//create the appropriate stream wrapper based on
 			//the encoding type
 			if (encoding != null && encoding.equalsIgnoreCase("gzip")) {
-			  is = new GZIPInputStream(connection.getInputStream());
+				Viewer.printDebug("Opening compressed HTTP connection, gzip");
+				is = new GZIPInputStream(connection.getInputStream());
 			}
 			else if (encoding != null && encoding.equalsIgnoreCase("deflate")) {
-			  is = new InflaterInputStream(connection.getInputStream(), new Inflater(true));
+				Viewer.printDebug("Opening compressed HTTP connection, deflate");
+				is = new InflaterInputStream(connection.getInputStream(), new Inflater(true));
 			}
 			else {
-			  is = connection.getInputStream();
+				Viewer.printDebug("Opening plain HTTP connection");
+				is = connection.getInputStream();
 			}
 		} catch (Exception e) {
 			Viewer.printDebug(" 	Couldnt connect to: " + sUrl);
