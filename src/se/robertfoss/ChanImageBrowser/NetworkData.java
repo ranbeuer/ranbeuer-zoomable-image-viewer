@@ -8,6 +8,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 import android.os.Environment;
 
@@ -67,8 +70,21 @@ public abstract class NetworkData {
 			connection.setDoOutput(true);
 			connection.setConnectTimeout(30000);
 			connection.setReadTimeout(60000);
+			connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
 			connection.connect();
-			is = connection.getInputStream();
+			String encoding = connection.getContentEncoding();
+			
+			//create the appropriate stream wrapper based on
+			//the encoding type
+			if (encoding != null && encoding.equalsIgnoreCase("gzip")) {
+			  is = new GZIPInputStream(connection.getInputStream());
+			}
+			else if (encoding != null && encoding.equalsIgnoreCase("deflate")) {
+			  is = new InflaterInputStream(connection.getInputStream(), new Inflater(true));
+			}
+			else {
+			  is = connection.getInputStream();
+			}
 		} catch (Exception e) {
 			Viewer.printDebug(" 	Couldnt connect to: " + sUrl);
 		}
