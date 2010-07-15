@@ -60,8 +60,6 @@ public class Viewer extends Activity {
 	private GridView gridView;
 	private ImageAdapter imgAdapter;
 	private FetcherManager man;
-	private File lastImageClicked = null;
-	private TouchImageView currentImageDisplayed = null;
 	
 	private static final int MENU_RELOAD = 0;
 	//private static final int MENU_MORE = 1;
@@ -137,17 +135,6 @@ public class Viewer extends Activity {
 		Viewer.this.setContentView(view);
 	}
 
-	
-	// I dont work on >= 1.6   --- Find a solution..
-//	@Override
-//	public void onBackPressed(){
-//		if (currentImageDisplayed != null){
-//			Viewer.this.setContentView(gridView);
-//			currentImageDisplayed.performClick();
-//		} else {
-//			super.onBackPressed();
-//		}
-//	}
 	
 	@Override
 	protected void onResume() {	
