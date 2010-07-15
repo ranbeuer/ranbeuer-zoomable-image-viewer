@@ -13,8 +13,8 @@ public class ThreadFetcher extends Thread {
 	private int imageRegexTruncateIndex;
 	private String prependToImageUrl;
 	private final static int THREAD_SLEEP_TIME = 5000;
-	private final static int IMAGE_DOWNLOAD_THRESHOLD = 12;
-	private final static int NUMBER_OF_RETRIES = 3;
+	private final static int IMAGE_DOWNLOAD_THRESHOLD = 10;
+	private final static int NUMBER_OF_RETRIES = 1;
 
 	ThreadFetcher(FetcherManager manager, String imageRegex, int imageRegexTruncateIndex,
 			String prependToImageUrl) {
