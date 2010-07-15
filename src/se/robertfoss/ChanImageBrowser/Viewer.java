@@ -118,28 +118,13 @@ public class Viewer extends Activity {
 			public void onItemClick(AdapterView<?> arg0, View arg1,
 					int position, long id) {
 				printDebug("Image " + position + " was clicked!");
-				TouchImageView.getImgFromFile(imgAdapter.getItem(position));
-
-				currentImageDisplayed = new TouchImageView(Viewer.this);
-
-				lastImageClicked = (File) imgAdapter.getItem(position);
 				
-				currentImageDisplayed.setImage(lastImageClicked, gridView.getWidth(),
-						gridView.getHeight());
+				File file = (File) imgAdapter.getItem(position);
 				
-
-				currentImageDisplayed.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						Viewer.this.setContentView(gridView);
-						v.setVisibility(View.GONE);
-						lastImageClicked = null;
-						currentImageDisplayed = null;
-
-					}
-				});
-
-				setContentView(currentImageDisplayed);
+				Intent i = new Intent(Viewer.this, ExpandImage.class);
+				i.putExtra("fileURI", file.toString());
+				
+				Viewer.this.startActivity(i);
 			}
 		});
 

@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.PointF;
+import android.util.AttributeSet;
 import android.util.FloatMath;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -37,8 +38,8 @@ public class TouchImageView extends ImageView {
 	
 	private Context context;
 	
-	public TouchImageView(Context context) {
-		super(context);
+	public TouchImageView(Context context, AttributeSet attrs) {
+        super(context, attrs);
 		super.setClickable(true);
 		this.context = context;
 		
