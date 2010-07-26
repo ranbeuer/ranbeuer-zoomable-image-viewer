@@ -3,6 +3,8 @@ package se.robertfoss.ChanImageBrowser.Fetcher;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import se.robertfoss.ChanImageBrowser.Viewer;
+
 import dk.brics.automaton.*;
 
 public class Parser {
@@ -14,6 +16,8 @@ public class Parser {
 	}
 	
 	public static ArrayList<String> parseForStrings(String input, String regex, int resultFromIndex) {
+		Viewer.printDebug("Regexp: Starting search for - " + regex);
+		
 		RunAutomaton automaton = regexAutomatonMap.get(regex);
 		if (automaton == null){
 			automaton = new RunAutomaton(new RegExp(regex).toAutomaton());
@@ -29,6 +33,9 @@ public class Parser {
 				matches.add(automMatcher.group(0).substring(resultFromIndex));
 			}
 		}
+		
+		Viewer.printDebug("Regexp: Ending search for - " + regex);
+		
 		return matches;
 	}
 	
