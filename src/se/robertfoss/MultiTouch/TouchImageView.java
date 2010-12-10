@@ -111,10 +111,8 @@ public class TouchImageView extends ImageView {
 	}
 	
 	
-	 public void setImage(File file, int displayWidth, int displayHeight) { 
-		image = TouchImageView.getImgFromFile(file);
-		this.imageFile = file;
-		super.setImageBitmap(image);
+	 public void setImage(Bitmap img, int displayWidth, int displayHeight) { 
+		super.setImageBitmap(img);
 		
 		centerImage();
 	 }
@@ -201,17 +199,5 @@ public class TouchImageView extends ImageView {
 		float x = event.getX(0) + event.getX(1);
 		float y = event.getY(0) + event.getY(1);
 		point.set(x / 2, y / 2);
-	}
-
-
-	public static Bitmap getImgFromFile(File file) {
-	
-		Bitmap pic = BitmapFactory.decodeFile(file.toString());
-		if (pic == null) {
-			Viewer.printDebug("	    Tried to read image: " + file.toString());
-			Viewer.printDebug("     Image from file is null");
-		}
-	
-		return pic;
 	}
 }

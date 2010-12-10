@@ -18,6 +18,7 @@ import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
@@ -66,10 +67,9 @@ public class Viewer extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		dalvik.system.VMRuntime.getRuntime().setMinimumHeapSize(32*1024*1024);
 		setContentView(R.layout.main);
 		printDebug("onCreate()");
-		
+	
 		
 		fileList = new ArrayList<File>();
 		imgAdapter = new ImageAdapter(this, NBR_IMAGES_TO_DISPLAY_MAX);
