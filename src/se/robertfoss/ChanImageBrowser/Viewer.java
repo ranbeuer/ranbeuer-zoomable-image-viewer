@@ -3,8 +3,6 @@ package se.robertfoss.ChanImageBrowser;
 import java.io.File;
 import java.util.ArrayList;
 
-import com.nullwire.trace.ExceptionHandler;
-
 import se.robertfoss.ChanImageBrowser.Fetcher.FetcherManager;
 import se.robertfoss.MultiTouch.TouchImageView;
 
@@ -20,7 +18,6 @@ import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
@@ -73,10 +70,6 @@ public class Viewer extends Activity {
 		setContentView(R.layout.main);
 		printDebug("onCreate()");
 		
-		//Doesnt work on 1.6
-		//Debug.startMethodTracing("myapp");
-		
-		ExceptionHandler.register(this);
 		
 		fileList = new ArrayList<File>();
 		imgAdapter = new ImageAdapter(this, NBR_IMAGES_TO_DISPLAY_MAX);
