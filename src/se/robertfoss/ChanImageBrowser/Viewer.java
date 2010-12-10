@@ -69,11 +69,12 @@ public class Viewer extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		dalvik.system.VMRuntime.getRuntime().setMinimumHeapSize(32*1024*1024);
 		setContentView(R.layout.main);
 		printDebug("onCreate()");
 		
-		// Doesnt work on 1.6
-//		Debug.startMethodTracing("myapp");
+		//Doesnt work on 1.6
+		//Debug.startMethodTracing("myapp");
 		
 		ExceptionHandler.register(this);
 		
@@ -191,7 +192,7 @@ public class Viewer extends Activity {
 		super.finish();
 		
 		// Doesnt work on 1.6
-//		Debug.stopMethodTracing();
+		// Debug.stopMethodTracing();
 
 	}
 
