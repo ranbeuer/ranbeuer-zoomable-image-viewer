@@ -112,9 +112,9 @@ public class Viewer extends Activity {
 				printDebug("Image " + position + " was clicked!");
 				
 				File file = (File) imgAdapter.getItem(position);
-				
+				printDebug("	Expanding image: " +  file.getAbsoluteFile());
 				Intent i = new Intent(Viewer.this, ExpandImage.class);
-				i.putExtra("fileURI", file.toString());
+				i.putExtra("fileURI", file.getAbsoluteFile().toString());
 				
 				Viewer.this.startActivity(i);
 			}

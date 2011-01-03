@@ -28,7 +28,7 @@ public class ExpandImage extends Activity {
 		Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
 
-		BitmapFactory.decodeFile(file.toString(), options);
+		BitmapFactory.decodeFile(file, options);
 		if (options.outHeight != -1 && options.outWidth != -1) {
 			Viewer.printDebug("Image is valid - " + file.toString());
 			// Only scale if we need to
@@ -47,8 +47,12 @@ public class ExpandImage extends Activity {
 
 			// Do the actual decoding
 			options.inJustDecodeBounds = false;
-			Bitmap img = BitmapFactory.decodeFile(file.toString(), options);
-
+			Bitmap img = BitmapFactory.decodeFile(file, options);
+			
+			if (img == null){
+				Viewer.printDebug("	ExpandImage: img is null");
+			}
+			
 			tiv.setImage(img, tiv.getWidth(), tiv.getHeight());
 			tiv.setOnClickListener(new OnClickListener() {
 				@Override

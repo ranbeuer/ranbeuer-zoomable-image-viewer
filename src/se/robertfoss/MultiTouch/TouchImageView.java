@@ -113,7 +113,7 @@ public class TouchImageView extends ImageView {
 	
 	 public void setImage(Bitmap img, int displayWidth, int displayHeight) { 
 		super.setImageBitmap(img);
-		
+		image = img;
 		centerImage();
 	 }
 	 

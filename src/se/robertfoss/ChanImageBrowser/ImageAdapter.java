@@ -86,6 +86,7 @@ public class ImageAdapter extends BaseAdapter {
 			BitmapFactory.decodeFile(file.toString(), options);
 			if (options.outHeight != -1 && options.outWidth != -1) {
 				Viewer.printDebug("Image is valid - " + file.toString());
+				
 				// Only scale if we need to
 				Boolean scaleByHeight = !(Math.abs(options.outHeight
 						- TARGET_HEIGHT) >= Math.abs(options.outWidth
